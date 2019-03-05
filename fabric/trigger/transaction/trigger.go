@@ -15,7 +15,6 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 
-	//"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	jschema "github.com/xeipuuv/gojsonschema"
 )
@@ -33,7 +32,6 @@ const (
 )
 
 // Create a new logger
-//var log = logger.GetLogger("trigger-fabric-transaction")
 var log = shim.NewLogger("trigger-fabric-transaction")
 
 // TriggerMap maps transaction name in trigger handler setting to the trigger,
@@ -88,7 +86,6 @@ func (t *Trigger) Initialize(ctx trigger.InitContext) error {
 		_, ok := triggerMap[name]
 		if ok {
 			log.Warningf("transaction name %s used by multiple trigger handlers, only the last handler is effective", name)
-			//log.Warnf("transaction name %s used by multiple trigger handlers, only the last handler is effective", name)
 		}
 		triggerMap[name] = t
 
@@ -219,7 +216,6 @@ func rootParameters(metadata string) ([]ParameterIndex, error) {
 // Invoke starts the trigger and invokes the action registered in the handler,
 // and returns result as JSON string
 func (t *Trigger) Invoke(stub shim.ChaincodeStubInterface, fn string, args []string) (string, error) {
-	//func (t *Trigger) Invoke(stub interface{}, fn string, args []string) (string, error) {
 	log.Debugf("fabric.Trigger invokes fn %s with args %+v", fn, args)
 	if t.parameters == nil {
 		log.Errorf("parameters not defined for transaction %s", fn)
@@ -228,7 +224,6 @@ func (t *Trigger) Invoke(stub shim.ChaincodeStubInterface, fn string, args []str
 	for _, handler := range t.handlers {
 		if f := handler.GetStringSetting(sTransaction); f != fn {
 			log.Warningf("handler transaction %s is different from requested function %s", f, fn)
-			//log.Warnf("handler transaction %s is different from requested function %s", f, fn)
 			continue
 		}
 
@@ -269,7 +264,7 @@ func (t *Trigger) Invoke(stub shim.ChaincodeStubInterface, fn string, args []str
 					log.Errorf("failed to serialize reply: %+v", err)
 					return "", err
 				}
-				log.Debugf("flogo flow returned data: %s", string(replyData))
+				log.Debugf("flogo flow returned data of type %T: %s", dataAttr.Value(), string(replyData))
 				return string(replyData), nil
 			}
 			log.Warningf("flogo flow result does not contain attribute %s", rReturns)
