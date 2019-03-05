@@ -259,12 +259,13 @@ func (t *Trigger) Invoke(stub shim.ChaincodeStubInterface, fn string, args []str
 		if len(results) != 0 {
 			if dataAttr, ok := results[rReturns]; ok {
 				// return serialized JSON string
-				replyData, err := json.Marshal(dataAttr.Value())
+				cobj := dataAttr.Value().(*data.ComplexObject)
+				replyData, err := json.Marshal(cobj.Value)
 				if err != nil {
 					log.Errorf("failed to serialize reply: %+v", err)
 					return "", err
 				}
-				log.Debugf("flogo flow returned data of type %T: %s", dataAttr.Value(), string(replyData))
+				log.Debugf("flogo flow returned data of type %T: %s", cobj.Value, string(replyData))
 				return string(replyData), nil
 			}
 			log.Warningf("flogo flow result does not contain attribute %s", rReturns)
