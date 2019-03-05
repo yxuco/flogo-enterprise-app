@@ -49,7 +49,15 @@ var cp app.ConfigProvider
 
 // main function starts up the chaincode in the container during instantiate
 func main() {
-	logger.SetLevel(shim.LogDebug)
+	loglevel := "DEBUG"
+	if l, ok := os.LookupEnv("CORE_CHAINCODE_LOGGING_LEVEL"); ok {
+		loglevel = l
+	}
+	if level, err := shim.LogLevel(loglevel); err != nil {
+		logger.SetLevel(level)
+	} else {
+		logger.SetLevel(shim.LogDebug)
+	}
 
 	// configure flogo engine
 	if cp == nil {
