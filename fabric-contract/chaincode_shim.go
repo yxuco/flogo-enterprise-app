@@ -129,7 +129,8 @@ func inputAssignMap(ac *app.Config, triggerRef, name string) {
 					}
 				}
 				if !done {
-					logger.Infof("Add input mapper for %s to trigger %+v", name, tc.Id)
+					hc.GetSetting(trigger.STransaction)
+					logger.Infof("Add input mapper for %s to handler %+v", name, hc.GetSetting(trigger.STransaction))
 					mapDef := data.MappingDef{Type: data.MtAssign, Value: "$." + name, MapTo: name}
 					hc.Action.Mappings.Input = append(ivMap, &mapDef)
 				}

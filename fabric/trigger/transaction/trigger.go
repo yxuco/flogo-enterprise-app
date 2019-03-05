@@ -20,7 +20,8 @@ import (
 )
 
 const (
-	sTransaction = "name"
+	// STransaction is the name of the handler setting entry for transaction name
+	STransaction = "name"
 	sValidation  = "validation"
 	oParameters  = "parameters"
 	oTxID        = "txID"
@@ -74,14 +75,14 @@ type Trigger struct {
 	metadata   *trigger.Metadata
 	config     *trigger.Config
 	handlers   []*trigger.Handler
-	parameters []ParameterIndex
+	parameters map[string][]ParameterIndex
 }
 
 // Initialize implements trigger.Init.Initialize
 func (t *Trigger) Initialize(ctx trigger.InitContext) error {
 	t.handlers = ctx.GetHandlers()
 	for _, handler := range t.handlers {
-		name := handler.GetStringSetting(sTransaction)
+		name := handler.GetStringSetting(STransaction)
 		log.Info("init transaction trigger:", name)
 		_, ok := triggerMap[name]
 		if ok {
@@ -92,10 +93,11 @@ func (t *Trigger) Initialize(ctx trigger.InitContext) error {
 		// collect input parameter name and types from metadata
 		params, ok := handler.GetOutput()[oParameters].(*data.ComplexObject)
 		if ok {
+			// cache transaction parameters for each handler.
+			// Note: Flogo enterprise uses one handler per flow, but share the same trigger instance
 			if index, err := rootParameters(params.Metadata); err == nil {
-				t.parameters = index
+				t.parameters[name] = index
 			} else {
-				t.parameters = nil
 				log.Errorf("failed to initialize transaction parameters: %+v", err)
 			}
 		}
@@ -222,13 +224,13 @@ func (t *Trigger) Invoke(stub shim.ChaincodeStubInterface, fn string, args []str
 		return "", fmt.Errorf("parameters not defined for transaction %s", fn)
 	}
 	for _, handler := range t.handlers {
-		if f := handler.GetStringSetting(sTransaction); f != fn {
-			log.Warningf("handler transaction %s is different from requested function %s", f, fn)
+		if f := handler.GetStringSetting(STransaction); f != fn {
+			log.Debugf("skip handler for transaction %s that is different from requested function %s", f, fn)
 			continue
 		}
 
 		// construct transaction input data
-		transData, err := prepareTriggerData(t.parameters, args)
+		transData, err := prepareTriggerData(t.parameters[fn], args)
 		if err != nil {
 			return "", err
 		}
