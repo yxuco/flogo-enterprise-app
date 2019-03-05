@@ -10,11 +10,11 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/engine"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/protos/peer"
-	trigger "github.com/yxuco/flogo-components/trigger/fabric"
+	trigger "github.com/yxuco/flogo-enterprise-app/fabric/trigger/transaction"
 )
 
 const (
-	fabricTrigger = "github.com/yxuco/flogo-components/trigger/fabric"
+	fabricTrigger = "github.com/yxuco/flogo-enterprise-app/fabric/trigger/transaction"
 )
 
 // Contract implements chaincode interface for invoking Flogo flows
@@ -45,9 +45,7 @@ func (t *Contract) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 	return shim.Success([]byte(result))
 }
 
-var (
-	cp app.ConfigProvider
-)
+var cp app.ConfigProvider
 
 // main function starts up the chaincode in the container during instantiate
 func main() {

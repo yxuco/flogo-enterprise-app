@@ -1,5 +1,5 @@
 {
- "name": "Fabric_Contract",
+ "name": "Fabric Contract",
  "description": " ",
  "version": "1.0.0",
  "type": "flogo:app",
@@ -93,7 +93,7 @@
  ],
  "triggers": [
   {
-   "ref": "/fabric/trigger/transaction",
+   "ref": "github.com/yxuco/flogo-enterprise-app/fabric/trigger/transaction",
    "name": "HyperledgerFabricTransaction",
    "description": "",
    "settings": {},
