@@ -1,0 +1,156 @@
+{
+ "name": "Fabric_Contract",
+ "description": " ",
+ "version": "1.0.0",
+ "type": "flogo:app",
+ "appModel": "1.0.0",
+ "resources": [
+  {
+   "id": "flow:Fabric_Flow",
+   "data": {
+    "name": "Fabric Flow",
+    "description": "",
+    "tasks": [
+     {
+      "id": "LogMessage",
+      "name": "LogMessage",
+      "activity": {
+       "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
+       "input": {
+        "flowInfo": "false",
+        "addToFlow": "false"
+       },
+       "output": {},
+       "mappings": {
+        "input": [
+         {
+          "mapTo": "$INPUT['message']",
+          "type": "expression",
+          "value": "string.concat(\"fabric put_records: \", $flow.txID, \":\", $flow.txTime, \" count=\", \"2\")"
+         }
+        ]
+       }
+      }
+     },
+     {
+      "id": "Return",
+      "name": "Return",
+      "activity": {
+       "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreturn",
+       "input": {
+        "mappings": [
+         {
+          "mapTo": "$INPUT['returns']['records']",
+          "type": "array",
+          "value": "{\"to\":\"$INPUT['returns']['records']\",\"from\":\"$flow.parameters.records\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['txn_id']\",\"from\":\"$flow.txID\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['txn_time']\",\"from\":\"$flow.txTime\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['sequence']\",\"from\":1,\"type\":\"literal\"},{\"to\":\"$INPUT.$$['user_txn_id']\",\"from\":\"$.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_type']\",\"from\":\"SHA256\",\"type\":\"literal\"},{\"to\":\"$INPUT.$$['hash_value']\",\"from\":\"HASH-generated\",\"type\":\"literal\"},{\"to\":\"$INPUT.$$['data']\",\"from\":\"$.data\",\"type\":\"assign\"}]}"
+         }
+        ]
+       },
+       "output": {}
+      }
+     }
+    ],
+    "links": [
+     {
+      "id": 1,
+      "from": "LogMessage",
+      "to": "Return",
+      "type": "default"
+     }
+    ],
+    "metadata": {
+     "input": [
+      {
+       "name": "parameters",
+       "type": "complex_object",
+       "value": {
+        "value": "",
+        "metadata": "{\"records\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"}}}}}"
+       }
+      },
+      {
+       "name": "txID",
+       "type": "string"
+      },
+      {
+       "name": "txTime",
+       "type": "string"
+      }
+     ],
+     "output": [
+      {
+       "name": "returns",
+       "type": "complex_object",
+       "value": {
+        "value": "",
+        "metadata": "{\"records\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"txn_id\":{\"type\":\"string\"},\"txn_time\":{\"type\":\"string\"},\"sequence\":{\"type\":\"number\"},\"user_txn_id\":{\"type\":\"string\"},\"hash_type\":{\"type\":\"string\"},\"hash_value\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"}}}}}"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "triggers": [
+  {
+   "ref": "/fabric/trigger/transaction",
+   "name": "HyperledgerFabricTransaction",
+   "description": "",
+   "settings": {},
+   "id": "HyperledgerFabricTransaction",
+   "handlers": [
+    {
+     "description": "",
+     "settings": {
+      "name": "put_records",
+      "validation": false
+     },
+     "outputs": {
+      "parameters": {
+       "metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"records\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"}}}}}}",
+       "value": ""
+      },
+      "txID": "",
+      "txTime": "",
+      "_chaincode_stub": ""
+     },
+     "action": {
+      "ref": "github.com/TIBCOSoftware/flogo-contrib/action/flow",
+      "data": {
+       "flowURI": "res://flow:Fabric_Flow"
+      },
+      "mappings": {
+       "input": [
+        {
+         "mapTo": "$INPUT['txID']",
+         "type": "assign",
+         "value": "$.txID"
+        },
+        {
+         "mapTo": "$INPUT['txTime']",
+         "type": "assign",
+         "value": "$.txTime"
+        },
+        {
+         "mapTo": "$INPUT['parameters']['records']",
+         "type": "array",
+         "value": "{\"to\":\"$INPUT['parameters']['records']\",\"from\":\"$.parameters.records\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['user_txn_id']\",\"from\":\"$.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['data']\",\"from\":\"$.data\",\"type\":\"assign\"}]}"
+        }
+       ],
+       "output": [
+        {
+         "mapTo": "$INPUT['returns']['records']",
+         "type": "array",
+         "value": "{\"to\":\"$INPUT['returns']['records']\",\"from\":\"$.returns.records\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['txn_id']\",\"from\":\"$.txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['txn_time']\",\"from\":\"$.txn_time\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['sequence']\",\"from\":\"$.sequence\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['user_txn_id']\",\"from\":\"$.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_type']\",\"from\":\"$.hash_type\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_value']\",\"from\":\"$.hash_value\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['data']\",\"from\":\"$.data\",\"type\":\"assign\"}]}"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  }
+ ],
+ "properties": [],
+ "ui": "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",
+ "contrib": "W3sicmVmIjoiL2ZhYnJpYyIsInMzbG9jYXRpb24iOiJ7VVNFUklEfS9mYWJyaWMifSx7InJlZiI6ImdpdGh1Yi5jb20vVElCQ09Tb2Z0d2FyZS9mbG9nby1jb250cmliL2FjdGl2aXR5L2xvZyIsInMzbG9jYXRpb24iOiJ7VVNFUklEfS9EZWZhdWx0L2FjdGl2aXR5L2xvZyJ9XQ=="
+}
