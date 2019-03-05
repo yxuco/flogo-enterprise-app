@@ -58,7 +58,7 @@ func NewFactory(md *trigger.Metadata) trigger.Factory {
 
 // New Creates a new trigger instance for a given id
 func (t *TriggerFactory) New(config *trigger.Config) trigger.Trigger {
-	return &Trigger{metadata: t.metadata, config: config}
+	return &Trigger{metadata: t.metadata, config: config, parameters: map[string][]ParameterIndex{}}
 }
 
 // ParameterIndex stores transaction parameters and its location in raw JSON schema string
