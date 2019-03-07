@@ -6,9 +6,9 @@
  "appModel": "1.0.0",
  "resources": [
   {
-   "id": "flow:put_record",
+   "id": "flow:Put_Record",
    "data": {
-    "name": "put_record",
+    "name": "Put Record",
     "description": "",
     "tasks": [
      {
@@ -26,7 +26,61 @@
          {
           "mapTo": "$INPUT['message']",
           "type": "expression",
-          "value": "string.concat(\"received request: \", $flow.txID, \" - \", $flow.txTime)"
+          "value": "string.concat(\"created transaction: \", $flow.txID)"
+         }
+        ]
+       }
+      }
+     },
+     {
+      "id": "FabricPut",
+      "name": "FabricPut",
+      "activity": {
+       "ref": "github.com/yxuco/flogo-enterprise-app/fabric/activity/put",
+       "input": {
+        "valueType": "object",
+        "data": {
+         "metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"txn_id\":{\"type\":\"string\"},\"txn_time\":{\"type\":\"string\"},\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"},\"hash_type\":{\"type\":\"string\"},\"hash_value\":{\"type\":\"string\"}}}",
+         "value": ""
+        }
+       },
+       "output": {},
+       "mappings": {
+        "input": [
+         {
+          "mapTo": "$INPUT['key']",
+          "type": "expression",
+          "value": "string.concat($flow.txID, \":\", $flow.txTime)"
+         },
+         {
+          "mapTo": "$INPUT['data']['txn_id']",
+          "type": "assign",
+          "value": "$flow.txID"
+         },
+         {
+          "mapTo": "$INPUT['data']['txn_time']",
+          "type": "assign",
+          "value": "$flow.txTime"
+         },
+         {
+          "mapTo": "$INPUT['data']['user_txn_id']",
+          "type": "assign",
+          "value": "$flow.parameters.user_txn_id"
+         },
+         {
+          "mapTo": "$INPUT['data']['data']",
+          "type": "assign",
+          "value": "$flow.parameters.data"
+         },
+         {
+          "mapTo": "$INPUT['data']['hash_type']",
+          "type": "assign",
+          "value": "$flow.parameters.hash_type"
+         },
+         {
+          "mapTo": "$INPUT['data']['hash_value']",
+          "type": "assign",
+          "value": "$flow.parameters.hash_value"
          }
         ]
        }
@@ -40,32 +94,32 @@
        "input": {
         "mappings": [
          {
-          "mapTo": "$INPUT['txn_id']",
+          "mapTo": "$INPUT['returns']['txn_id']",
           "type": "assign",
           "value": "$flow.txID"
          },
          {
-          "mapTo": "$INPUT['txn_time']",
+          "mapTo": "$INPUT['returns']['txn_time']",
           "type": "assign",
           "value": "$flow.txTime"
          },
          {
-          "mapTo": "$INPUT['user_txn_id']",
+          "mapTo": "$INPUT['returns']['user_txn_id']",
           "type": "assign",
           "value": "$flow.parameters.user_txn_id"
          },
          {
-          "mapTo": "$INPUT['data']",
+          "mapTo": "$INPUT['returns']['data']",
           "type": "assign",
           "value": "$flow.parameters.data"
          },
          {
-          "mapTo": "$INPUT['hash_type']",
+          "mapTo": "$INPUT['returns']['hash_type']",
           "type": "assign",
           "value": "$flow.parameters.hash_type"
          },
          {
-          "mapTo": "$INPUT['hash_value']",
+          "mapTo": "$INPUT['returns']['hash_value']",
           "type": "assign",
           "value": "$flow.parameters.hash_value"
          }
@@ -79,6 +133,12 @@
      {
       "id": 1,
       "from": "LogMessage",
+      "to": "FabricPut",
+      "type": "default"
+     },
+     {
+      "id": 2,
+      "from": "FabricPut",
       "to": "Return",
       "type": "default"
      }
@@ -104,37 +164,21 @@
      ],
      "output": [
       {
-       "name": "txn_id",
-       "type": "string"
-      },
-      {
-       "name": "txn_time",
-       "type": "string"
-      },
-      {
-       "name": "user_txn_id",
-       "type": "string"
-      },
-      {
-       "name": "data",
-       "type": "string"
-      },
-      {
-       "name": "hash_type",
-       "type": "string"
-      },
-      {
-       "name": "hash_value",
-       "type": "string"
+       "name": "returns",
+       "type": "complex_object",
+       "value": {
+        "value": "",
+        "metadata": "{\"txn_id\":{\"type\":\"string\"},\"txn_time\":{\"type\":\"string\"},\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"},\"hash_type\":{\"type\":\"string\"},\"hash_value\":{\"type\":\"string\"}}"
+       }
       }
      ]
     }
    }
   },
   {
-   "id": "flow:put_records",
+   "id": "flow:Put_Records",
    "data": {
-    "name": "put_records",
+    "name": "Put Records",
     "description": "",
     "tasks": [
      {
@@ -152,7 +196,7 @@
          {
           "mapTo": "$INPUT['message']",
           "type": "expression",
-          "value": "string.concat(\"Received request \", $flow.txID)"
+          "value": "string.concat(\"created transaction: \", $flow.txID, \":\", $flow.txTime)"
          }
         ]
        }
@@ -166,9 +210,9 @@
        "input": {
         "mappings": [
          {
-          "mapTo": "$INPUT['records']",
+          "mapTo": "$INPUT['returns']",
           "type": "array",
-          "value": "{\"to\":\"$INPUT['records']\",\"from\":\"$flow.parameters.records\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['txn_id']\",\"from\":\"$flow.txID\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['txn_time']\",\"from\":\"$flow.txTime\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['sequence']\",\"from\":1,\"type\":\"literal\"},{\"to\":\"$INPUT.$$['user_txn_id']\",\"from\":\"$.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['data']\",\"from\":\"$.data\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_type']\",\"from\":\"SHA256\",\"type\":\"literal\"},{\"to\":\"$INPUT.$$['hash_value']\",\"from\":\"Hash-generated\",\"type\":\"literal\"}]}"
+          "value": "{\"to\":\"$INPUT['returns']\",\"from\":\"$flow.parameters.records\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['txn_id']\",\"from\":\"$flow.txID\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['txn_time']\",\"from\":\"$flow.txTime\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['sequence']\",\"from\":1,\"type\":\"literal\"},{\"to\":\"$INPUT.$$['user_txn_id']\",\"from\":\"$.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['data']\",\"from\":\"$.data\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_type']\",\"from\":\"SHA256\",\"type\":\"literal\"},{\"to\":\"$INPUT.$$['hash_value']\",\"from\":\"generated-Hash\",\"type\":\"literal\"}]}"
          }
         ]
        },
@@ -205,7 +249,7 @@
      ],
      "output": [
       {
-       "name": "records",
+       "name": "returns",
        "type": "array"
       }
      ]
@@ -239,7 +283,7 @@
      "action": {
       "ref": "github.com/TIBCOSoftware/flogo-contrib/action/flow",
       "data": {
-       "flowURI": "res://flow:put_record"
+       "flowURI": "res://flow:Put_Record"
       },
       "mappings": {
        "input": [
@@ -278,32 +322,32 @@
         {
          "mapTo": "$INPUT['returns']['txn_id']",
          "type": "assign",
-         "value": "$.txn_id"
+         "value": "$.returns.txn_id"
         },
         {
          "mapTo": "$INPUT['returns']['txn_time']",
          "type": "assign",
-         "value": "$.txn_time"
+         "value": "$.returns.txn_time"
         },
         {
          "mapTo": "$INPUT['returns']['user_txn_id']",
          "type": "assign",
-         "value": "$.user_txn_id"
+         "value": "$.returns.user_txn_id"
         },
         {
          "mapTo": "$INPUT['returns']['data']",
          "type": "assign",
-         "value": "$.data"
+         "value": "$.returns.data"
         },
         {
          "mapTo": "$INPUT['returns']['hash_type']",
          "type": "assign",
-         "value": "$.hash_type"
+         "value": "$.returns.hash_type"
         },
         {
          "mapTo": "$INPUT['returns']['hash_value']",
          "type": "assign",
-         "value": "$.hash_value"
+         "value": "$.returns.hash_value"
         }
        ]
       }
@@ -327,7 +371,7 @@
      "action": {
       "ref": "github.com/TIBCOSoftware/flogo-contrib/action/flow",
       "data": {
-       "flowURI": "res://flow:put_records"
+       "flowURI": "res://flow:Put_Records"
       },
       "mappings": {
        "input": [
@@ -349,9 +393,9 @@
        ],
        "output": [
         {
-         "mapTo": "$INPUT['returns']['records']",
+         "mapTo": "$INPUT['returns']",
          "type": "array",
-         "value": "{\"to\":\"$INPUT['returns']['records']\",\"from\":\"$.records\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['txn_id']\",\"from\":\"$.txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['txn_time']\",\"from\":\"$.txn_time\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['sequence']\",\"from\":\"$.sequence\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['user_txn_id']\",\"from\":\"$.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['data']\",\"from\":\"$.data\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_type']\",\"from\":\"$.hash_type\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_value']\",\"from\":\"$.hash_value\",\"type\":\"assign\"}]}"
+         "value": "{\"to\":\"$INPUT['returns']\",\"from\":\"$.returns\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['txn_id']\",\"from\":\"$.txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['txn_time']\",\"from\":\"$.txn_time\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['sequence']\",\"from\":\"$.sequence\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['user_txn_id']\",\"from\":\"$.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['data']\",\"from\":\"$.data\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_type']\",\"from\":\"$.hash_type\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_value']\",\"from\":\"$.hash_value\",\"type\":\"assign\"}]}"
         }
        ]
       }
@@ -361,6 +405,6 @@
   }
  ],
  "properties": [],
- "ui": "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",
+ "ui": "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",
  "contrib": "W3sicmVmIjoiZ2l0aHViLmNvbS95eHVjby9mbG9nby1lbnRlcnByaXNlLWFwcC9mYWJyaWMiLCJzM2xvY2F0aW9uIjoie1VTRVJJRH0vZmFicmljIn0seyJyZWYiOiJnaXRodWIuY29tL1RJQkNPU29mdHdhcmUvZmxvZ28tY29udHJpYi9hY3Rpdml0eS9sb2ciLCJzM2xvY2F0aW9uIjoie1VTRVJJRH0vRGVmYXVsdC9hY3Rpdml0eS9sb2cifV0="
 }
