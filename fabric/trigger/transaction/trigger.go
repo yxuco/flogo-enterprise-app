@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -86,6 +87,15 @@ type Trigger struct {
 
 // Initialize implements trigger.Init.Initialize
 func (t *Trigger) Initialize(ctx trigger.InitContext) error {
+	loglevel := "DEBUG"
+	if l, ok := os.LookupEnv("CORE_CHAINCODE_LOGGING_LEVEL"); ok {
+		loglevel = l
+	}
+	if level, err := shim.LogLevel(loglevel); err != nil {
+		log.SetLevel(level)
+	} else {
+		log.SetLevel(shim.LogDebug)
+	}
 	t.handlers = ctx.GetHandlers()
 	for _, handler := range t.handlers {
 		name := handler.GetStringSetting(STransaction)
