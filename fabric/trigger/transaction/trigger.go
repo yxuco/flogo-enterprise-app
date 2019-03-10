@@ -176,7 +176,9 @@ func transientParameters(metadata string) ([]ParameterIndex, error) {
 		return nil, err
 	}
 
+	log.Debugf("root parameters %+v\n", root)
 	if transientData, ok := root.Properties[pTransient]; ok {
+		log.Debugf("transient parameters %+v\n", transientData)
 		return objectParameters(transientData, true)
 	}
 	return nil, nil
@@ -202,6 +204,7 @@ func objectParameters(schemaData []byte, isTransient bool) ([]ParameterIndex, er
 	// collect parameter locations in the raw object schema
 	var paramIndex []ParameterIndex
 	for p, v := range params {
+		log.Debugf("process parameter '%s' isTransient '%b': %+v\n", p, isTransient, v)
 		// encode parameter name with quotes
 		key, _ := json.Marshal(p)
 		// key may exist in raw schema multiple times,
@@ -229,6 +232,7 @@ func objectParameters(schemaData []byte, isTransient bool) ([]ParameterIndex, er
 				if paramDef.RawType != "" {
 					paramType = paramDef.RawType
 				}
+				log.Debugf("add index parameter '%s' isTransient '%b' type '%s'\n", p, isTransient, paramType)
 				paramIndex = addIndex(paramIndex, ParameterIndex{name: p, jsonType: paramType, start: pos, end: endPos})
 			}
 			pos += len(key) + len(seg)
