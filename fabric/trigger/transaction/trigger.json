@@ -49,7 +49,7 @@
             "required": true,
             "display": {
                 "name": "Parameter names and schema",
-                "description": "e.g.,\r\n{\r\n  \"param1\": \"string\",\r\n  \"param2\": {\"field1\": 0}\r\n}",
+                "description": "definition of input parameters, optionally wrap transient attributes using parameter name 'transient', e.g.,\r\n{\r\n  \"param1\": \"string\",\r\n  \"param2\": {\"field1\": 0},\r\n  \"transient\": {\"trans1\": \"\"}\r\n}",
                 "type": "texteditor",
                 "syntax": "json"
             },
