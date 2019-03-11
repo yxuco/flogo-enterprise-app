@@ -37,6 +37,9 @@ docker exec -it cli bash
 peer chaincode install -p chaincodedev/chaincode/flogo_cc -n flogo_cc -v 0
 peer chaincode instantiate -n flogo_cc -v 0 -c '{"Args":["init"]}' -C myc
 
-peer chaincode invoke -n flogo_cc -c '{"Args":["put_record","user_txn_1","hello_1","SHA256","hash_1"]}' -C myc
-peer chaincode invoke -n flogo_cc -c '{"Args":["put_records","[{\"user_txn_id\":\"trans_1\",\"data\":\"hello_1\"}]"]}' -C myc
+# test transient attributes, which must be encoded as base64
+export SECRET=$(echo -n "\"MyTransientSecret\"" | base64)
+export PIN=$(echo -n "1054" | base64)
+peer chaincode invoke -n flogo_cc -c '{"Args":["put_record","user_txn_1","hello_1","SHA256","hash_1"]}' -C myc --transient "{\"secret\": \"$SECRET\", \"pin\": \"$PIN\"}"
+peer chaincode invoke -n flogo_cc -c '{"Args":["put_records","[{\"user_txn_id\":\"trans_1\",\"data\":\"hello_1\"}]"]}' -C myc --transient "{\"secret\": \"$SECRET\"}"
 ```
