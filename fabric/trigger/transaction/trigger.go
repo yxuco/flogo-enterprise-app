@@ -121,9 +121,11 @@ func (t *Trigger) Initialize(ctx trigger.InitContext) error {
 			}
 
 			// cache transient attributes
-			if transientIndex, err := transientParameters(params.Metadata); err != nil && transientIndex != nil {
+			if transientIndex, err := transientParameters(params.Metadata); err == nil && transientIndex != nil {
 				log.Debugf("cache transient attributes for flow %s: %+v\n", name, transientIndex)
 				t.transient[name] = transientIndex
+			} else {
+				log.Infof("no transient attribute for index %+v error %+v\n", transientIndex, err)
 			}
 		}
 
