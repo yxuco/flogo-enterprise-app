@@ -113,6 +113,7 @@ func (t *Trigger) Initialize(ctx trigger.InitContext) error {
 			// Note: Flogo enterprise uses one handler per flow, but share the same trigger instance
 			if index, err := objectParameters([]byte(params.Metadata), false); err == nil {
 				if index != nil {
+					log.Debugf("cache parameters for flow %s: %+v\n", name, index)
 					t.parameters[name] = index
 				}
 			} else {
@@ -121,6 +122,7 @@ func (t *Trigger) Initialize(ctx trigger.InitContext) error {
 
 			// cache transient attributes
 			if transientIndex, err := transientParameters(params.Metadata); err != nil && transientIndex != nil {
+				log.Debugf("cache transient attributes for flow %s: %+v\n", name, transientIndex)
 				t.transient[name] = transientIndex
 			}
 		}
@@ -186,9 +188,8 @@ func transientParameters(metadata string) ([]ParameterIndex, error) {
 		return nil, err
 	}
 
-	log.Debugf("root parameters %+v\n", root)
 	if transientData, ok := root.Properties[pTransient]; ok {
-		log.Debugf("transient parameters %+v\n", transientData)
+		log.Debugf("transient parameters %s\n", string(transientData))
 		return objectParameters(transientData, true)
 	}
 	return nil, nil
@@ -214,7 +215,7 @@ func objectParameters(schemaData []byte, isTransient bool) ([]ParameterIndex, er
 	// collect parameter locations in the raw object schema
 	var paramIndex []ParameterIndex
 	for p, v := range params {
-		log.Debugf("process parameter '%s' isTransient '%b': %+v\n", p, isTransient, v)
+		log.Debugf("process parameter '%s' isTransient '%t': %s\n", p, isTransient, string(v))
 		// encode parameter name with quotes
 		key, _ := json.Marshal(p)
 		// key may exist in raw schema multiple times,
@@ -242,7 +243,7 @@ func objectParameters(schemaData []byte, isTransient bool) ([]ParameterIndex, er
 				if paramDef.RawType != "" {
 					paramType = paramDef.RawType
 				}
-				log.Debugf("add index parameter '%s' isTransient '%b' type '%s'\n", p, isTransient, paramType)
+				log.Debugf("add index parameter '%s' isTransient '%t' type '%s'\n", p, isTransient, paramType)
 				paramIndex = addIndex(paramIndex, ParameterIndex{name: p, jsonType: paramType, start: pos, end: endPos})
 			}
 			pos += len(key) + len(seg)
@@ -335,7 +336,7 @@ func (t *Trigger) Invoke(stub shim.ChaincodeStubInterface, fn string, args []str
 
 // construct trigger output data for specified parameter index, and values of the parameters
 func prepareTriggerData(stub shim.ChaincodeStubInterface, transientIndex []ParameterIndex, paramIndex []ParameterIndex, values []string) (interface{}, error) {
-	log.Debugf("prepareFlowData with parameters %+v values %+v", paramIndex, values)
+	log.Debugf("prepareFlowData with transient %+v parameters %+v values %+v", transientIndex, paramIndex, values)
 	if paramIndex == nil && len(values) > 0 {
 		// unknown parameter schema
 		return nil, errors.New("parameter schema is not defined")
@@ -379,6 +380,8 @@ func prepareTriggerData(stub shim.ChaincodeStubInterface, transientIndex []Param
 			}
 		}
 		result[pTransient] = transient
+	} else {
+		log.Infof("no transient index: %+v\n", transientIndex)
 	}
 	return result, nil
 }
