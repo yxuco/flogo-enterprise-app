@@ -37,6 +37,18 @@ const (
 // Create a new logger
 var log = shim.NewLogger("trigger-fabric-transaction")
 
+func init() {
+	loglevel := "DEBUG"
+	if l, ok := os.LookupEnv("CORE_CHAINCODE_LOGGING_LEVEL"); ok {
+		loglevel = l
+	}
+	if level, err := shim.LogLevel(loglevel); err != nil {
+		log.SetLevel(level)
+	} else {
+		log.SetLevel(shim.LogDebug)
+	}
+}
+
 // TriggerMap maps transaction name in trigger handler setting to the trigger,
 // so we can lookup trigger by transaction name
 var triggerMap = map[string]*Trigger{}
@@ -87,15 +99,6 @@ type Trigger struct {
 
 // Initialize implements trigger.Init.Initialize
 func (t *Trigger) Initialize(ctx trigger.InitContext) error {
-	loglevel := "DEBUG"
-	if l, ok := os.LookupEnv("CORE_CHAINCODE_LOGGING_LEVEL"); ok {
-		loglevel = l
-	}
-	if level, err := shim.LogLevel(loglevel); err != nil {
-		log.SetLevel(level)
-	} else {
-		log.SetLevel(shim.LogDebug)
-	}
 	t.handlers = ctx.GetHandlers()
 	for _, handler := range t.handlers {
 		name := handler.GetStringSetting(STransaction)

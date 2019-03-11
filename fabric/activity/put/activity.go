@@ -3,15 +3,13 @@ package put
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/pkg/errors"
 	trigger "github.com/yxuco/flogo-enterprise-app/fabric/trigger/transaction"
 )
-
-// Create a new logger
-var log = shim.NewLogger("activity-fabric-put")
 
 const (
 	ivKey        = "key"
@@ -24,6 +22,21 @@ const (
 	ovMessage    = "message"
 	objectType   = "object"
 )
+
+// Create a new logger
+var log = shim.NewLogger("activity-fabric-put")
+
+func init() {
+	loglevel := "DEBUG"
+	if l, ok := os.LookupEnv("CORE_CHAINCODE_LOGGING_LEVEL"); ok {
+		loglevel = l
+	}
+	if level, err := shim.LogLevel(loglevel); err != nil {
+		log.SetLevel(level)
+	} else {
+		log.SetLevel(shim.LogDebug)
+	}
+}
 
 // FabricPutActivity is a stub for executing Hyperledger Fabric put operations
 type FabricPutActivity struct {
