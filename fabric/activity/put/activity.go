@@ -70,7 +70,7 @@ func (a *FabricPutActivity) Eval(ctx activity.Context) (done bool, err error) {
 	if vtype == objectType {
 		value = ctx.GetInput(ivData)
 	}
-	log.Debugf("input value: %+v", value)
+	log.Debugf("input value type %T: %+v", value, value)
 	data, err := json.Marshal(value)
 	if err != nil {
 		log.Errorf("failed to marshal value '%+v', error: %+v", value, err)
