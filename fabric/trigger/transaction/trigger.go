@@ -217,7 +217,7 @@ func objectParameters(schemaData []byte, isTransient bool) ([]ParameterIndex, er
 	// collect parameter locations in the raw object schema
 	var paramIndex []ParameterIndex
 	for p, v := range params {
-		log.Debugf("process parameter '%s' isTransient '%t': %s\n", p, isTransient, string(v))
+		//		log.Debugf("process parameter '%s' isTransient '%t': %s\n", p, isTransient, string(v))
 		// encode parameter name with quotes
 		key, _ := json.Marshal(p)
 		// key may exist in raw schema multiple times,
@@ -372,18 +372,18 @@ func prepareTriggerData(stub shim.ChaincodeStubInterface, transientIndex []Param
 			if v, ok := transMap[p.name]; ok {
 				var obj interface{}
 				if err := json.Unmarshal(v, &obj); err == nil {
-					log.Debugf("received transient data, name: $s, value: %+v", p.name, obj)
+					log.Debugf("received transient data, name: %s, value: %+v", p.name, obj)
 					transient[p.name] = obj
 				} else {
 					log.Warningf("failed to unmarshal transient data, name: %s, error: %+v", p.name, err)
 				}
 			} else {
-				log.Debugf("no data received for transient attribute: $s", p.name)
+				log.Debugf("no data received for transient attribute: %s", p.name)
 			}
 		}
 		result[pTransient] = transient
 	} else {
-		log.Infof("no transient index: %+v\n", transientIndex)
+		log.Debugf("no transient index: %+v\n", transientIndex)
 	}
 	return result, nil
 }
