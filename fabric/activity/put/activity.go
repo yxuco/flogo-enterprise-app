@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/pkg/errors"
 	trigger "github.com/yxuco/flogo-enterprise-app/fabric/trigger/transaction"
@@ -68,7 +69,14 @@ func (a *FabricPutActivity) Eval(ctx activity.Context) (done bool, err error) {
 	log.Debugf("value type: %s", vtype)
 	value := ctx.GetInput(ivValue)
 	if vtype == objectType {
-		value = ctx.GetInput(ivData)
+		if obj, ok := ctx.GetInput(ivData).(*data.ComplexObject); ok {
+			value = obj.Value
+		} else {
+			log.Errorf("input data is not a complex object")
+			ctx.SetOutput(ovCode, 500)
+			ctx.SetOutput(ovMessage, "input data is not a complex object")
+			return false, errors.New("input data is not a complex object")
+		}
 	}
 	log.Debugf("input value type %T: %+v", value, value)
 	data, err := json.Marshal(value)
@@ -136,7 +144,7 @@ func (a *FabricPutActivity) Eval(ctx activity.Context) (done bool, err error) {
 // which is shown in normal flogo mapper as, e.g., "$flow.content"
 func GetData(toResolve string, context activity.Context) (value interface{}, err error) {
 	actionCtx := context.ActivityHost()
-	log.Debugf("fabricop context data: %+v", actionCtx.WorkingData())
+	log.Debugf("Fabric context data: %+v", actionCtx.WorkingData())
 	actValue, err := actionCtx.GetResolver().Resolve(toResolve, actionCtx.WorkingData())
 	return actValue, err
 }
