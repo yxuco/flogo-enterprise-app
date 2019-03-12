@@ -10,7 +10,7 @@
         "visible": true,
         "smallIcon": "icons/ic-fabric.png",
         "largeIcon": "icons/ic-fabric@2x.png",
-        "wizard": ["Step 1", "Step 2"]
+        "wizard": ["Step 1", "Step 2", "Step 3"]
     },
     "ref": "github.com/yxuco/flogo-enterprise-app/fabric/trigger/transaction",
     "homepage": "http://github.com/yxuco/flogo-enterprise-app/fabric/trigger/transaction",
