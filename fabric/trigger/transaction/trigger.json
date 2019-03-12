@@ -22,7 +22,8 @@
             "required": true,
             "display": {
                 "name": "Transaction name",
-                "description": "Name of the transaction for Hyperledger Fabric contract"
+                "description": "Name of the transaction for Hyperledger Fabric contract",
+                "appPropertySupport": true
             },
             "wizard": {
                 "name": "Transaction name",
@@ -35,8 +36,8 @@
             "type": "boolean",
             "required": false,
             "display": {
+                "name": "Output validation",
                 "description": "Selection for output validation, default false",
-                "name": "Output Validation",
                 "appPropertySupport": true
             },
             "value": false
@@ -46,10 +47,9 @@
         {
             "name": "parameters",
             "type": "complex_object",
-            "required": true,
             "display": {
                 "name": "Parameter names and schema",
-                "description": "definition of input parameters, optionally wrap transient attributes using parameter name 'transient', e.g.,\r\n{\r\n  \"param1\": \"string\",\r\n  \"param2\": {\"field1\": 0},\r\n  \"transient\": {\"trans1\": \"\"}\r\n}",
+                "description": "e.g.,\r\n{\r\n  \"param1\": \"string\",\r\n  \"param2\": {\"field1\": 0}\r\n}",
                 "type": "texteditor",
                 "syntax": "json"
             },
@@ -58,6 +58,22 @@
                 "type": "texteditor",
                 "syntax": "json",
                 "step": "Step 1"
+            }
+        },
+        {
+            "name": "transient",
+            "type": "complex_object",
+            "display": {
+                "name": "Transient attributes and schema",
+                "description": "e.g.,\r\n{\r\n  \"trans1\": \"string\",\r\n  \"trans2\": {\"item1\": 0}\r\n}",
+                "type": "texteditor",
+                "syntax": "json"
+            },
+            "wizard": {
+                "name": "Transient attributes and schema",
+                "type": "texteditor",
+                "syntax": "json",
+                "step": "Step 2"
             }
         },
         {
@@ -82,7 +98,7 @@
         "type": "complex_object",
         "display": {
             "name": "Returned attributes and schema",
-            "description": "e.g.,\r\n{\r\n  \"attr1\": \"string\",\r\n  \"attr2\": {\"field1\": 0}\r\n}",
+            "description": "e.g.,\r\n{\r\n  \"attr1\": \"string\",\r\n  \"attr2\": {\"elem1\": 0}\r\n}",
             "type": "texteditor",
             "syntax": "json",
             "mappable": true
@@ -91,7 +107,7 @@
             "name": "Returned attributes and schema",
             "type": "texteditor",
             "syntax": "json",
-            "step": "Step 2"
+            "step": "Step 3"
         }
     }],
     "actions": [{

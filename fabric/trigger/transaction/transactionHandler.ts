@@ -31,27 +31,42 @@ export class transactionHandler extends WiServiceHandlerContribution {
     validate = (fieldName: string, context: ITriggerContribution): Observable<IValidationResult> | IValidationResult => {
         if (fieldName === "parameters") {
             if (context.getMode() === MODE.WIZARD || context.getMode() === MODE.SERVERLESS_FLOW) {
-                let parameters: IFieldDefinition = context.getField("parameters");
-                let valRes;
-                if (parameters.value) {
+                let parametersField: IFieldDefinition = context.getField("parameters");
+                if (parametersField.value) {
                     try {
-                        valRes = JSON.parse(parameters.value);
+                        // verify well-formed JSON schema
+                        let valRes;
+                        valRes = JSON.parse(parametersField.value);
                         valRes = JSON.stringify(valRes);
                     } catch (e) {
-                        return ValidationResult.newValidationResult().setError("SCHEMA_ERROR", "Unexpected string in JSON");
+                        return ValidationResult.newValidationResult().setError("FABTIC-TRIGGER-1000", "Invalid JSON: " + e.toString());
+                    }
+                }
+            }
+        } else if (fieldName === "transient") {
+            if (context.getMode() === MODE.WIZARD || context.getMode() === MODE.SERVERLESS_FLOW) {
+                let transientField: IFieldDefinition = context.getField("transient");
+                if (transientField.value) {
+                    try {
+                        // verify well-formed JSON schema
+                        let valRes;
+                        valRes = JSON.parse(transientField.value);
+                        valRes = JSON.stringify(valRes);
+                    } catch (e) {
+                        return ValidationResult.newValidationResult().setError("FABTIC-TRIGGER-1000", "Invalid JSON: " + e.toString());
                     }
                 }
             }
         } else if (fieldName === "returns") {
             if (context.getMode() === MODE.WIZARD || context.getMode() === MODE.SERVERLESS_FLOW) {
-                let returns: IFieldDefinition = context.getField("returns");
-                let valRes;
-                if (returns.value) {
+                let returnsField: IFieldDefinition = context.getField("returns");
+                if (returnsField.value) {
                     try {
-                        valRes = JSON.parse(returns.value);
+                        let valRes;
+                        valRes = JSON.parse(returnsField.value);
                         valRes = JSON.stringify(valRes);
                     } catch (e) {
-                        return ValidationResult.newValidationResult().setError("SCHEMA_ERROR", "Unexpected string in JSON");
+                        return ValidationResult.newValidationResult().setError("FABTIC-TRIGGER-1000", "Invalid JSON: " + e.toString());
                     }
                 }
             }
@@ -64,16 +79,16 @@ export class transactionHandler extends WiServiceHandlerContribution {
         let modelService = this.getModelService();
         let result = CreateFlowActionResult.newActionResult();
         if (context.handler && context.handler.settings && context.handler.settings.length > 0) {
-            let txnName = <IFieldDefinition>context.getField("name");
-            let parameters = <IFieldDefinition>context.getField("parameters");
-            let returns = <IFieldDefinition>context.getField("returns");
-            if (txnName && txnName.value) {
+            let nameField = <IFieldDefinition>context.getField("name");
+            let parametersField = <IFieldDefinition>context.getField("parameters");
+            let transientField = <IFieldDefinition>context.getField("transient");
+            let returnsField = <IFieldDefinition>context.getField("returns");
+            if (nameField && nameField.value) {
                 let trigger = modelService.createTriggerElement("fabric/fabric-transaction");
                 if (trigger && trigger.handler && trigger.handler.settings && trigger.handler.settings.length > 0) {
                     for (let j = 0; j < trigger.handler.settings.length; j++) {
                         if (trigger.handler.settings[j].name === "name") {
-                            trigger.handler.settings[j].value = txnName.value;
-                            break;
+                            trigger.handler.settings[j].value = nameField.value;
                         }
                     }
                 }
@@ -81,10 +96,14 @@ export class transactionHandler extends WiServiceHandlerContribution {
                     for (let j = 0; j < trigger.outputs.length; j++) {
                         if (trigger.outputs[j].name === "parameters") {
                             trigger.outputs[j].value = {
-                                "value": parameters.value,
+                                "value": parametersField.value,
                                 "metadata": ""
                             };
-                            break;
+                        } else if (trigger.outputs[j].name === "transient") {
+                            trigger.outputs[j].value = {
+                                "value": transientField.value,
+                                "metadata": ""
+                            };
                         }
                     }
                 }
@@ -92,14 +111,14 @@ export class transactionHandler extends WiServiceHandlerContribution {
                     for (let j = 0; j < trigger.reply.length; j++) {
                         if (trigger.reply[j].name === "returns") {
                             trigger.reply[j].value = {
-                                "value": returns.value,
+                                "value": returnsField.value,
                                 "metadata": ""
                             };
                             break;
                         }
                     }
                 }
-                let flowModel = modelService.createFlow(txnName.value, context.getFlowDescription());
+                let flowModel = modelService.createFlow(nameField.value, context.getFlowDescription());
                 result = result.addTriggerFlowMapping(lodash.cloneDeep(trigger), lodash.cloneDeep(flowModel));
             }
         }

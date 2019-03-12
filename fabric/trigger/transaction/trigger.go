@@ -25,10 +25,10 @@ const (
 	STransaction = "name"
 	sValidation  = "validation"
 	oParameters  = "parameters"
+	oTransient   = "transient"
 	oTxID        = "txID"
 	oTxTime      = "txTime"
 	rReturns     = "returns"
-	pTransient   = "transient"
 
 	// FabricStub is the name of flow property for passing chaincode stub to activities
 	FabricStub = "_chaincode_stub"
@@ -72,11 +72,7 @@ func NewFactory(md *trigger.Metadata) trigger.Factory {
 
 // New Creates a new trigger instance for a given id
 func (t *TriggerFactory) New(config *trigger.Config) trigger.Trigger {
-	return &Trigger{
-		metadata:   t.metadata,
-		config:     config,
-		parameters: map[string][]ParameterIndex{},
-		transient:  map[string][]ParameterIndex{}}
+	return &Trigger{metadata: t.metadata, config: config, parameters: map[string][]ParameterIndex{}}
 }
 
 // ParameterIndex stores transaction parameters and its location in raw JSON schema string
@@ -94,7 +90,6 @@ type Trigger struct {
 	config     *trigger.Config
 	handlers   []*trigger.Handler
 	parameters map[string][]ParameterIndex
-	transient  map[string][]ParameterIndex
 }
 
 // Initialize implements trigger.Init.Initialize
@@ -114,21 +109,13 @@ func (t *Trigger) Initialize(ctx trigger.InitContext) error {
 		if ok {
 			// cache transaction parameters for each handler.
 			// Note: Flogo enterprise uses one handler per flow, but share the same trigger instance
-			if index, err := objectParameters([]byte(params.Metadata), false); err == nil {
+			if index, err := objectParameters([]byte(params.Metadata)); err == nil {
 				if index != nil {
 					log.Debugf("cache parameters for flow %s: %+v\n", name, index)
 					t.parameters[name] = index
 				}
 			} else {
 				log.Errorf("failed to initialize transaction parameters: %+v", err)
-			}
-
-			// cache transient attributes
-			if transientIndex, err := transientParameters(params.Metadata); err == nil && transientIndex != nil {
-				log.Debugf("cache transient attributes for flow %s: %+v\n", name, transientIndex)
-				t.transient[name] = transientIndex
-			} else {
-				log.Infof("no transient attribute for index %+v error %+v\n", transientIndex, err)
 			}
 		}
 
@@ -185,22 +172,8 @@ func addIndex(parameters []ParameterIndex, param ParameterIndex) []ParameterInde
 	return append(parameters, param)
 }
 
-func transientParameters(metadata string) ([]ParameterIndex, error) {
-	var root struct {
-		Properties map[string]json.RawMessage `json:"properties"`
-	}
-	if err := json.Unmarshal([]byte(metadata), &root); err != nil {
-		return nil, err
-	}
-
-	if transientData, ok := root.Properties[pTransient]; ok {
-		log.Debugf("transient parameters %s\n", string(transientData))
-		return objectParameters(transientData, true)
-	}
-	return nil, nil
-}
-
-func objectParameters(schemaData []byte, isTransient bool) ([]ParameterIndex, error) {
+// extract ordered parameters from schema definition
+func objectParameters(schemaData []byte) ([]ParameterIndex, error) {
 	// extract root object properties from JSON schema
 	var rawProperties struct {
 		Data json.RawMessage `json:"properties"`
@@ -220,7 +193,6 @@ func objectParameters(schemaData []byte, isTransient bool) ([]ParameterIndex, er
 	// collect parameter locations in the raw object schema
 	var paramIndex []ParameterIndex
 	for p, v := range params {
-		//		log.Debugf("process parameter '%s' isTransient '%t': %s\n", p, isTransient, string(v))
 		// encode parameter name with quotes
 		key, _ := json.Marshal(p)
 		// key may exist in raw schema multiple times,
@@ -248,24 +220,10 @@ func objectParameters(schemaData []byte, isTransient bool) ([]ParameterIndex, er
 				if paramDef.RawType != "" {
 					paramType = paramDef.RawType
 				}
-				log.Debugf("add index parameter '%s' isTransient '%t' type '%s'\n", p, isTransient, paramType)
+				log.Debugf("add index parameter '%s' type '%s'\n", p, paramType)
 				paramIndex = addIndex(paramIndex, ParameterIndex{name: p, jsonType: paramType, start: pos, end: endPos})
 			}
 			pos += len(key) + len(seg)
-		}
-	}
-
-	// remove transient object from paramIndex if it is for normal schema object
-	if !isTransient {
-		for i, v := range paramIndex {
-			if v.name == pTransient && v.jsonType == jschema.TYPE_OBJECT {
-				if i+1 < len(paramIndex) {
-					paramIndex = append(paramIndex[:i], paramIndex[i+1:]...)
-				} else {
-					paramIndex = paramIndex[:i]
-				}
-				break
-			}
 		}
 	}
 
@@ -288,23 +246,44 @@ func (t *Trigger) Invoke(stub shim.ChaincodeStubInterface, fn string, args []str
 			log.Debugf("skip handler for transaction %s that is different from requested function %s", f, fn)
 			continue
 		}
-
-		// construct transaction input data
-		transData, err := prepareTriggerData(stub, t.transient[fn], t.parameters[fn], args)
-		if err != nil {
-			return "", err
-		}
-		if log.IsEnabledFor(shim.LogDebug) {
-			// debug flow data
-			triggerData, _ := json.Marshal(transData)
-			log.Debugf("trigger output data: %s", string(triggerData))
-		}
-
-		// set trigger data
-		params, _ := handler.GetOutput()[oParameters].(*data.ComplexObject)
-		params.Value = transData
 		triggerData := make(map[string]interface{})
-		triggerData[oParameters] = params
+
+		// construct transaction parameters
+		paramIndex := t.parameters[fn]
+		if paramIndex != nil && len(paramIndex) > 0 {
+			paramData, err := prepareParameters(paramIndex, args)
+			if err != nil {
+				return "", err
+			}
+			if log.IsEnabledFor(shim.LogDebug) {
+				// debug flow data
+				paramBytes, _ := json.Marshal(paramData)
+				log.Debugf("trigger parameters: %s", string(paramBytes))
+			}
+
+			// set trigger parameters
+			params, _ := handler.GetOutput()[oParameters].(*data.ComplexObject)
+			params.Value = paramData
+			triggerData[oParameters] = params
+		}
+
+		// construct transient attributes
+		if transMap, ok := handler.GetOutput()[oTransient].(*data.ComplexObject); ok && transMap != nil && transMap.Metadata != "" {
+			transData, err := prepareTransient(stub)
+			if err != nil {
+				return "", err
+			}
+			if log.IsEnabledFor(shim.LogDebug) {
+				// debug flow data
+				transBytes, _ := json.Marshal(transData)
+				log.Debugf("trigger transient attributes: %s", string(transBytes))
+			}
+
+			// set trigger transient attributes
+			transMap.Value = transData
+			triggerData[oTransient] = transMap
+		}
+
 		triggerData[FabricStub] = stub
 		triggerData[oTxID] = stub.GetTxID()
 		if ts, err := stub.GetTxTimestamp(); err == nil {
@@ -339,9 +318,30 @@ func (t *Trigger) Invoke(stub shim.ChaincodeStubInterface, fn string, args []str
 	return "", nil
 }
 
-// construct trigger output data for specified parameter index, and values of the parameters
-func prepareTriggerData(stub shim.ChaincodeStubInterface, transientIndex []ParameterIndex, paramIndex []ParameterIndex, values []string) (interface{}, error) {
-	log.Debugf("prepareFlowData with transient %+v parameters %+v values %+v", transientIndex, paramIndex, values)
+// construct trigger output transient attributes
+func prepareTransient(stub shim.ChaincodeStubInterface) (map[string]interface{}, error) {
+	transient := make(map[string]interface{})
+	transMap, err := stub.GetTransient()
+	if err != nil {
+		// cannot find transient attributes
+		log.Warningf("no transient map: %+v", err)
+		return transient, nil
+	}
+	for k, v := range transMap {
+		var obj interface{}
+		if err := json.Unmarshal(v, &obj); err == nil {
+			log.Debugf("received transient data, name: %s, value: %+v", k, obj)
+			transient[k] = obj
+		} else {
+			log.Warningf("failed to unmarshal transient data, name: %s, error: %+v", k, err)
+		}
+	}
+	return transient, nil
+}
+
+// construct trigger output parameters for specified parameter index, and values of the parameters
+func prepareParameters(paramIndex []ParameterIndex, values []string) (interface{}, error) {
+	log.Debugf("prepare parameters %+v values %+v", paramIndex, values)
 	if paramIndex == nil && len(values) > 0 {
 		// unknown parameter schema
 		return nil, errors.New("parameter schema is not defined")
@@ -361,32 +361,6 @@ func prepareTriggerData(stub shim.ChaincodeStubInterface, transientIndex []Param
 				result[paramIndex[i].name] = obj
 			}
 		}
-	}
-	if transientIndex != nil && len(transientIndex) > 0 {
-		// populate transient attributes
-		transMap, err := stub.GetTransient()
-		if err != nil {
-			// cannot find transient attributes
-			log.Warningf("no transient map: %+v", err)
-			return result, nil
-		}
-		transient := make(map[string]interface{})
-		for _, p := range transientIndex {
-			if v, ok := transMap[p.name]; ok {
-				var obj interface{}
-				if err := json.Unmarshal(v, &obj); err == nil {
-					log.Debugf("received transient data, name: %s, value: %+v", p.name, obj)
-					transient[p.name] = obj
-				} else {
-					log.Warningf("failed to unmarshal transient data, name: %s, error: %+v", p.name, err)
-				}
-			} else {
-				log.Debugf("no data received for transient attribute: %s", p.name)
-			}
-		}
-		result[pTransient] = transient
-	} else {
-		log.Debugf("no transient index: %+v\n", transientIndex)
 	}
 	return result, nil
 }
