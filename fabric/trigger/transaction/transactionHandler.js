@@ -38,30 +38,45 @@ var transactionHandler = (function (_super) {
         _this.validate = function (fieldName, context) {
             if (fieldName === "parameters") {
                 if (context.getMode() === contrib_1.MODE.WIZARD || context.getMode() === contrib_1.MODE.SERVERLESS_FLOW) {
-                    var parameters = context.getField("parameters");
-                    var valRes = void 0;
-                    if (parameters.value) {
+                    var parametersField = context.getField("parameters");
+                    if (parametersField.value) {
                         try {
-                            valRes = JSON.parse(parameters.value);
+                            var valRes = void 0;
+                            valRes = JSON.parse(parametersField.value);
                             valRes = JSON.stringify(valRes);
                         }
                         catch (e) {
-                            return validation_1.ValidationResult.newValidationResult().setError("SCHEMA_ERROR", "Unexpected string in JSON");
+                            return validation_1.ValidationResult.newValidationResult().setError("FABTIC-TRIGGER-1000", "Invalid JSON: " + e.toString());
+                        }
+                    }
+                }
+            }
+            else if (fieldName === "transient") {
+                if (context.getMode() === contrib_1.MODE.WIZARD || context.getMode() === contrib_1.MODE.SERVERLESS_FLOW) {
+                    var transientField = context.getField("transient");
+                    if (transientField.value) {
+                        try {
+                            var valRes = void 0;
+                            valRes = JSON.parse(transientField.value);
+                            valRes = JSON.stringify(valRes);
+                        }
+                        catch (e) {
+                            return validation_1.ValidationResult.newValidationResult().setError("FABTIC-TRIGGER-1000", "Invalid JSON: " + e.toString());
                         }
                     }
                 }
             }
             else if (fieldName === "returns") {
                 if (context.getMode() === contrib_1.MODE.WIZARD || context.getMode() === contrib_1.MODE.SERVERLESS_FLOW) {
-                    var returns = context.getField("returns");
-                    var valRes = void 0;
-                    if (returns.value) {
+                    var returnsField = context.getField("returns");
+                    if (returnsField.value) {
                         try {
-                            valRes = JSON.parse(returns.value);
+                            var valRes = void 0;
+                            valRes = JSON.parse(returnsField.value);
                             valRes = JSON.stringify(valRes);
                         }
                         catch (e) {
-                            return validation_1.ValidationResult.newValidationResult().setError("SCHEMA_ERROR", "Unexpected string in JSON");
+                            return validation_1.ValidationResult.newValidationResult().setError("FABTIC-TRIGGER-1000", "Invalid JSON: " + e.toString());
                         }
                     }
                 }
@@ -72,16 +87,16 @@ var transactionHandler = (function (_super) {
             var modelService = _this.getModelService();
             var result = wi_contrib_1.CreateFlowActionResult.newActionResult();
             if (context.handler && context.handler.settings && context.handler.settings.length > 0) {
-                var txnName = context.getField("name");
-                var parameters = context.getField("parameters");
-                var returns = context.getField("returns");
-                if (txnName && txnName.value) {
+                var nameField = context.getField("name");
+                var parametersField = context.getField("parameters");
+                var transientField = context.getField("transient");
+                var returnsField = context.getField("returns");
+                if (nameField && nameField.value) {
                     var trigger = modelService.createTriggerElement("fabric/fabric-transaction");
                     if (trigger && trigger.handler && trigger.handler.settings && trigger.handler.settings.length > 0) {
                         for (var j = 0; j < trigger.handler.settings.length; j++) {
                             if (trigger.handler.settings[j].name === "name") {
-                                trigger.handler.settings[j].value = txnName.value;
-                                break;
+                                trigger.handler.settings[j].value = nameField.value;
                             }
                         }
                     }
@@ -89,10 +104,15 @@ var transactionHandler = (function (_super) {
                         for (var j = 0; j < trigger.outputs.length; j++) {
                             if (trigger.outputs[j].name === "parameters") {
                                 trigger.outputs[j].value = {
-                                    "value": parameters.value,
+                                    "value": parametersField.value,
                                     "metadata": ""
                                 };
-                                break;
+                            }
+                            else if (trigger.outputs[j].name === "transient") {
+                                trigger.outputs[j].value = {
+                                    "value": transientField.value,
+                                    "metadata": ""
+                                };
                             }
                         }
                     }
@@ -100,14 +120,14 @@ var transactionHandler = (function (_super) {
                         for (var j = 0; j < trigger.reply.length; j++) {
                             if (trigger.reply[j].name === "returns") {
                                 trigger.reply[j].value = {
-                                    "value": returns.value,
+                                    "value": returnsField.value,
                                     "metadata": ""
                                 };
                                 break;
                             }
                         }
                     }
-                    var flowModel = modelService.createFlow(txnName.value, context.getFlowDescription());
+                    var flowModel = modelService.createFlow(nameField.value, context.getFlowDescription());
                     result = result.addTriggerFlowMapping(lodash.cloneDeep(trigger), lodash.cloneDeep(flowModel));
                 }
             }
