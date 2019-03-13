@@ -13,16 +13,17 @@ import (
 )
 
 const (
-	ivKey        = "key"
-	ivValueType  = "valueType"
-	ivValue      = "value"
-	ivData       = "data"
-	ivIsPrivate  = "isPrivate"
-	ivCollection = "collection"
-	ovCode       = "code"
-	ovMessage    = "message"
-	ovResult     = "result"
-	objectType   = "object"
+	ivKey           = "key"
+	ivValueType     = "valueType"
+	ivValue         = "value"
+	ivData          = "data"
+	ivIsPrivate     = "isPrivate"
+	ivCollection    = "collection"
+	ivCompositeKeys = "compositeKeys"
+	ovCode          = "code"
+	ovMessage       = "message"
+	ovResult        = "result"
+	objectType      = "object"
 )
 
 // Create a new logger
@@ -86,6 +87,13 @@ func (a *FabricPutActivity) Eval(ctx activity.Context) (done bool, err error) {
 		ctx.SetOutput(ovCode, 400)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to marshal value: %+v", err))
 		return false, errors.Wrapf(err, "failed to marshal value: %+v", value)
+	}
+
+	// check composite keys
+	if keys, ok := ctx.GetInput(ivCompositeKeys).(*data.ComplexObject); ok {
+		log.Debugf("Got composite keys: %+v\n", keys.Value)
+	} else {
+		log.Debugf("No composite key is defined")
 	}
 
 	// get chaincode stub

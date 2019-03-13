@@ -71,6 +71,16 @@
                 "visible": false,
                 "mappable": true
             }
+        },
+        {
+            "name": "compositeKeys",
+            "type": "complex_object",
+            "display": {
+                "type": "params",
+                "name": "Composite keys",
+                "description": "Define search index using composite key name and attributes. Attributes are comma-delimited data field names",
+                "schema": "{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"keyName\":{\"type\":\"string\"},\"attributes\":{\"type\":\"string\"}}}}"
+            }
         }
     ],
     "outputs": [
