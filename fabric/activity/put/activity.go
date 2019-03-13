@@ -21,6 +21,7 @@ const (
 	ivCollection = "collection"
 	ovCode       = "code"
 	ovMessage    = "message"
+	ovResult     = "result"
 	objectType   = "object"
 )
 
@@ -79,7 +80,7 @@ func (a *FabricPutActivity) Eval(ctx activity.Context) (done bool, err error) {
 		}
 	}
 	log.Debugf("input value type %T: %+v", value, value)
-	data, err := json.Marshal(value)
+	jsonBytes, err := json.Marshal(value)
 	if err != nil {
 		log.Errorf("failed to marshal value '%+v', error: %+v", value, err)
 		ctx.SetOutput(ovCode, 400)
@@ -114,28 +115,38 @@ func (a *FabricPutActivity) Eval(ctx activity.Context) (done bool, err error) {
 			ctx.SetOutput(ovMessage, "private collection is not specified")
 			return false, errors.New("private collection is not specified")
 		}
-		if err := ccshim.PutPrivateData(collection, key, data); err != nil {
+		if err := ccshim.PutPrivateData(collection, key, jsonBytes); err != nil {
 			log.Errorf("failed to store data in private collection %s: %+v", collection, err)
 			ctx.SetOutput(ovCode, 500)
 			ctx.SetOutput(ovMessage, fmt.Sprintf("failed to store data in private collection %s: %+v", collection, err))
 			return false, errors.Wrapf(err, "failed to store data in private collection %s", collection)
 		}
-		log.Debugf("stored in private collection %s, data: %s", collection, string(data))
+		log.Debugf("stored in private collection %s, data: %s", collection, string(jsonBytes))
 		ctx.SetOutput(ovCode, 200)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("stored in private collection %s, data: %s", collection, string(data)))
+		ctx.SetOutput(ovMessage, fmt.Sprintf("stored in private collection %s, data: %s", collection, string(jsonBytes)))
+		if result, ok := ctx.GetOutput(ovResult).(*data.ComplexObject); ok && result != nil {
+			log.Debugf("set activity output result: %+v", value)
+			result.Value = value
+			ctx.SetOutput(ovResult, result)
+		}
 		return true, nil
 	}
 
 	// store data on the ledger
-	if err := ccshim.PutState(key, data); err != nil {
+	if err := ccshim.PutState(key, jsonBytes); err != nil {
 		log.Errorf("failed to store data on ledger: %+v", err)
 		ctx.SetOutput(ovCode, 500)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to store data on ledger: %+v", err))
 		return false, errors.Errorf("failed to store data on ledger: %+v", err)
 	}
-	log.Debugf("stored data on ledger: %s", string(data))
+	log.Debugf("stored data on ledger: %s", string(jsonBytes))
 	ctx.SetOutput(ovCode, 200)
-	ctx.SetOutput(ovMessage, fmt.Sprintf("stored data on ledger: %s", string(data)))
+	ctx.SetOutput(ovMessage, fmt.Sprintf("stored data on ledger: %s", string(jsonBytes)))
+	if result, ok := ctx.GetOutput(ovResult).(*data.ComplexObject); ok && result != nil {
+		log.Debugf("set activity output result: %+v", value)
+		result.Value = value
+		ctx.SetOutput(ovResult, result)
+	}
 	return true, nil
 }
 
