@@ -23,7 +23,6 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var core_1 = require("@angular/core");
-var Observable_1 = require("rxjs/Observable");
 var wi_contrib_1 = require("wi-studio/app/contrib/wi-contrib");
 var validation_1 = require("wi-studio/common/models/validation");
 var putHandler = (function (_super) {
@@ -31,14 +30,23 @@ var putHandler = (function (_super) {
     function putHandler(injector) {
         var _this = _super.call(this, injector) || this;
         _this.value = function (fieldName, context) {
+            if (fieldName === "result") {
+                var valueTypeField = context.getField("valueType");
+                if (valueTypeField.value && valueTypeField.value === "object") {
+                    var dataField = context.getField("data");
+                    if (dataField && dataField.value && dataField.value.value) {
+                        return dataField.value.value;
+                    }
+                }
+            }
             return null;
         };
         _this.validate = function (fieldName, context) {
             if (fieldName === "value") {
                 var vresult = validation_1.ValidationResult.newValidationResult();
-                var valueTypeFieldDef = context.getField("valueType");
-                var valueFieldDef = context.getField("value");
-                if (valueTypeFieldDef.value && valueTypeFieldDef.value === "object") {
+                var valueTypeField = context.getField("valueType");
+                var valueField = context.getField("value");
+                if (valueTypeField.value && valueTypeField.value === "object") {
                     vresult.setVisible(false);
                 }
                 else {
@@ -48,10 +56,10 @@ var putHandler = (function (_super) {
             }
             else if (fieldName === "collection") {
                 var vresult = validation_1.ValidationResult.newValidationResult();
-                var isPrivateFieldDef = context.getField("isPrivate");
-                var collectionFieldDef = context.getField("collection");
-                if (isPrivateFieldDef.value && isPrivateFieldDef.value === true) {
-                    if (collectionFieldDef.display && collectionFieldDef.display.visible == false) {
+                var isPrivateField = context.getField("isPrivate");
+                var collectionField = context.getField("collection");
+                if (isPrivateField.value && isPrivateField.value === true) {
+                    if (collectionField.display && collectionField.display.visible == false) {
                         vresult.setVisible(true);
                     }
                 }
@@ -62,19 +70,19 @@ var putHandler = (function (_super) {
             }
             else if (fieldName === "data") {
                 var vresult = validation_1.ValidationResult.newValidationResult();
-                var valueTypeFieldDef = context.getField("valueType");
-                var dataFieldDef = context.getField("data");
-                if (valueTypeFieldDef.value && valueTypeFieldDef.value === "object") {
-                    if (dataFieldDef.display && dataFieldDef.display.visible == false) {
+                var valueTypeField = context.getField("valueType");
+                var dataField = context.getField("data");
+                if (valueTypeField.value && valueTypeField.value === "object") {
+                    if (dataField.display && dataField.display.visible == false) {
                         vresult.setVisible(true);
                     }
-                    if (dataFieldDef.value === null || dataFieldDef.value === "") {
+                    if (dataField.value === null || dataField.value.value === null || dataField.value.value === "") {
                         vresult.setError("FABTIC-PUT-1010", "Data definition must not be empty");
                     }
                     else {
                         var valRes = void 0;
                         try {
-                            valRes = JSON.parse(dataFieldDef.value.value);
+                            valRes = JSON.parse(dataField.value.value);
                             valRes = JSON.stringify(valRes);
                         }
                         catch (e) {
@@ -87,13 +95,18 @@ var putHandler = (function (_super) {
                 }
                 return vresult;
             }
+            else if (fieldName === "result") {
+                var vresult = validation_1.ValidationResult.newValidationResult();
+                var valueTypeField = context.getField("valueType");
+                if (valueTypeField.value && valueTypeField.value === "object") {
+                    vresult.setVisible(true);
+                }
+                else {
+                    vresult.setVisible(false);
+                }
+                return vresult;
+            }
             return null;
-        };
-        _this.action = function (actionId, context) {
-            return Observable_1.Observable.create(function (observer) {
-                var aresult = wi_contrib_1.ActionResult.newActionResult();
-                observer.next(aresult);
-            });
         };
         return _this;
     }
