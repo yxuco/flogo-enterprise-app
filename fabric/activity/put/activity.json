@@ -74,12 +74,12 @@
         },
         {
             "name": "compositeKeys",
-            "type": "complex_object",
+            "type": "string",
             "display": {
-                "type": "params",
                 "name": "Composite keys",
-                "description": "Define search index using composite key name and attributes. Attributes are comma-delimited data field names",
-                "schema": "{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"keyName\":{\"type\":\"string\"},\"attributes\":{\"type\":\"string\"}}}}"
+                "description": "Define search index using composite key name and attributes, e.g. {\r\n    \"index-color\": [\"color\", \"name\"],\r\n    \"index-owner\": [\"owner\", \"name\"]\r\n}",
+                "type": "texteditor",
+                "syntax": "json"
             }
         }
     ],

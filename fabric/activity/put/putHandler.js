@@ -106,41 +106,6 @@ var putHandler = (function (_super) {
                 }
                 return vresult;
             }
-            else if (fieldName === "compositeKeys") {
-                var vresult = validation_1.ValidationResult.newValidationResult();
-                var compositeKeyField = context.getField(fieldName);
-                var arrKeyNamesTmp = [];
-                var compositeKeysParsed = {};
-                try {
-                    compositeKeysParsed = JSON.parse(compositeKeyField.value.value);
-                }
-                catch (e) {
-                    vresult.setError("FABRIC-PUT-1000", "Invalid JSON in composite key: " + compositeKeyField.value.value + " - " + e.toString());
-                    return vresult;
-                }
-                for (var _i = 0, compositeKeysParsed_1 = compositeKeysParsed; _i < compositeKeysParsed_1.length; _i++) {
-                    var ckey = compositeKeysParsed_1[_i];
-                    if (!ckey.keyName) {
-                        vresult.setError("FABRIC-PUT-1000", "Key name should not be empty");
-                        return vresult;
-                    }
-                    else if (!ckey.attributes) {
-                        vresult.setError("FABRIC-PUT-1000", "Key attributes should not be empty");
-                        return vresult;
-                    }
-                    else {
-                        for (var _a = 0, arrKeyNamesTmp_1 = arrKeyNamesTmp; _a < arrKeyNamesTmp_1.length; _a++) {
-                            var kName = arrKeyNamesTmp_1[_a];
-                            if (kName === ckey.keyName) {
-                                vresult.setError("FABRIC-PUT-1000", "Key name \'" + ckey.keyName + "\' already exists");
-                                return vresult;
-                            }
-                        }
-                        arrKeyNamesTmp.push(ckey.keyName);
-                    }
-                }
-                return vresult;
-            }
             return null;
         };
         return _this;

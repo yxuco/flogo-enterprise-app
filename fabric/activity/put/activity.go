@@ -90,8 +90,8 @@ func (a *FabricPutActivity) Eval(ctx activity.Context) (done bool, err error) {
 	}
 
 	// check composite keys
-	if keys, ok := ctx.GetInput(ivCompositeKeys).(*data.ComplexObject); ok {
-		log.Debugf("Got composite keys: %+v\n", keys.Value)
+	if keys, ok := ctx.GetInput(ivCompositeKeys).(string); ok {
+		log.Debugf("Got composite keys: %s\n", keys)
 	} else {
 		log.Debugf("No composite key is defined")
 	}

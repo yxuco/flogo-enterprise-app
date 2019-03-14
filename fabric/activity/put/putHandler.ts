@@ -89,37 +89,6 @@ export class putHandler extends WiServiceHandlerContribution {
                 vresult.setVisible(false);
             }
             return vresult;
-        } else if (fieldName === "compositeKeys") {
-            let vresult: IValidationResult = ValidationResult.newValidationResult();
-            let compositeKeyField: IFieldDefinition = context.getField(fieldName);
-            let arrKeyNamesTmp: any[] = [];
-            let compositeKeysParsed: any = {};
-
-            try {
-                compositeKeysParsed = JSON.parse(compositeKeyField.value.value);
-            } catch (e) { 
-                vresult.setError("FABRIC-PUT-1000", "Invalid JSON in composite key: " + compositeKeyField.value.value + " - " + e.toString());
-                return vresult;
-            }
-
-            for (let ckey of compositeKeysParsed) {
-                if (!ckey.keyName) {
-                    vresult.setError("FABRIC-PUT-1000", "Key name should not be empty");
-                    return vresult;
-                } else if (!ckey.attributes) {
-                    vresult.setError("FABRIC-PUT-1000", "Key attributes should not be empty");
-                    return vresult;
-                } else {
-                    for (let kName of arrKeyNamesTmp) {
-                        if (kName === ckey.keyName) {
-                            vresult.setError("FABRIC-PUT-1000", "Key name \'" + ckey.keyName + "\' already exists");
-                            return vresult;
-                        }
-                    }
-                    arrKeyNamesTmp.push(ckey.keyName);
-                }
-            }
-            return vresult;
         }
         return null;
     }
