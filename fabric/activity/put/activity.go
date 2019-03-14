@@ -92,6 +92,12 @@ func (a *FabricPutActivity) Eval(ctx activity.Context) (done bool, err error) {
 	// check composite keys
 	if keys, ok := ctx.GetInput(ivCompositeKeys).(string); ok {
 		log.Debugf("Got composite keys: %s\n", keys)
+		keyMap := make(map[string][]string)
+		if err := json.Unmarshal([]byte(keys), &keyMap); err != nil {
+			log.Warningf("failed to unmarshal composite keys: %+v\n", err)
+		} else {
+			log.Debugf("Parsed composite keys: %+v\n", keyMap)
+		}
 	} else {
 		log.Debugf("No composite key is defined")
 	}
