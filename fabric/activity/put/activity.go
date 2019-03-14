@@ -82,19 +82,6 @@ func (a *FabricPutActivity) Eval(ctx activity.Context) (done bool, err error) {
 	}
 	log.Debugf("input value type %T: %+v\n", value, value)
 
-	// check composite keys
-	if keys, ok := ctx.GetInput(ivCompositeKeys).(string); ok {
-		log.Debugf("Got composite keys: %s\n", keys)
-		keyMap := make(map[string][]string)
-		if err := json.Unmarshal([]byte(keys), &keyMap); err != nil {
-			log.Warningf("failed to unmarshal composite keys: %+v\n", err)
-		} else {
-			log.Debugf("Parsed composite keys: %+v\n", keyMap)
-		}
-	} else {
-		log.Debugf("No composite key is defined\n")
-	}
-
 	// get chaincode stub
 	stub, err := resolveFlowData("$flow."+trigger.FabricStub, ctx)
 	if err != nil || stub == nil {
