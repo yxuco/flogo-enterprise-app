@@ -71,6 +71,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	// set mapping to pass fabric stub to activities in the flow
+	// this is a workaround until flogo-lib can accept pass-through flow attributes in
+	// handler.Handle(context.Background(), triggerData) that bypasses the mapper.
+	// see issue: https://github.com/TIBCOSoftware/flogo-lib/issues/267
 	inputAssignMap(ac, fabricTrigger, trigger.FabricStub)
 	e, err := engine.New(ac)
 	if err != nil {
