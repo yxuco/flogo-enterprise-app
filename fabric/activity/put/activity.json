@@ -2,7 +2,7 @@
     "name": "fabric-put",
     "version": "1.0.0",
     "type": "flogo:activity",
-    "title": "Fabric Put",
+    "title": "Put",
     "author": "TIBCO Software Inc.",
     "display": {
         "category": "fabric",
@@ -67,9 +67,9 @@
             "type": "string",
             "display": {
                 "name": "Private collection name",
-                "description": "Name of the default private collection",
-                "visible": false,
-                "mappable": true
+                "description": "Name of the private collection",
+                "appPropertySupport": true,
+                "visible": false
             }
         },
         {
@@ -77,9 +77,10 @@
             "type": "string",
             "display": {
                 "name": "Composite keys",
-                "description": "Define search index using composite key name and attributes, e.g. {\r\n    \"index-color\": [\"color\", \"name\"],\r\n    \"index-owner\": [\"owner\", \"name\"]\r\n}",
+                "description": "Define search index using composite key name and attributes (Note: the key value will be appended to composite-key if the value of the last specified attribute does not match the key), e.g. {\r\n    \"index-color\": [\"color\", \"name\"],\r\n    \"index-owner\": [\"owner\", \"name\"]\r\n}",
                 "type": "texteditor",
-                "syntax": "json"
+                "syntax": "json",
+                "appPropertySupport": true
             }
         }
     ],
@@ -90,6 +91,10 @@
         },
         {
             "name": "message",
+            "type": "string"
+        },
+        {
+            "name": "key",
             "type": "string"
         },
         {

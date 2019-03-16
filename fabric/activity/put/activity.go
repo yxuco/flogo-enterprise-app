@@ -22,6 +22,7 @@ const (
 	ivCompositeKeys = "compositeKeys"
 	ovCode          = "code"
 	ovMessage       = "message"
+	ovKey           = "key"
 	ovResult        = "result"
 	objectType      = "object"
 )
@@ -133,8 +134,8 @@ func storePrivateData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, 
 	log.Debugf("stored in private collection %s, data: %s\n", collection, string(jsonBytes))
 
 	// store composite keys if required
-	if keys, err := getCompositeKeys(ctx, ccshim, value); err == nil && keys != nil && len(keys) > 0 {
-		for _, k := range keys {
+	if compKeys, err := getCompositeKeys(ctx, ccshim, key, value); err == nil && compKeys != nil && len(compKeys) > 0 {
+		for _, k := range compKeys {
 			cv := []byte{0x00}
 			if err := ccshim.PutPrivateData(collection, k, cv); err != nil {
 				log.Errorf("failed to store composite key %s on collection %s: %+v\n", k, collection, err)
@@ -150,6 +151,7 @@ func storePrivateData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, 
 		log.Debugf("set activity output result: %+v\n", value)
 		result.Value = value
 		ctx.SetOutput(ovResult, result)
+		ctx.SetOutput(ovKey, key)
 	}
 	return true, nil
 }
@@ -172,8 +174,8 @@ func storeData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, key str
 	log.Debugf("stored data on ledger: %s\n", string(jsonBytes))
 
 	// store composite keys if required
-	if keys, err := getCompositeKeys(ctx, ccshim, value); err == nil && keys != nil && len(keys) > 0 {
-		for _, k := range keys {
+	if compKeys, err := getCompositeKeys(ctx, ccshim, key, value); err == nil && compKeys != nil && len(compKeys) > 0 {
+		for _, k := range compKeys {
 			cv := []byte{0x00}
 			if err := ccshim.PutState(k, cv); err != nil {
 				log.Errorf("failed to store composite key %s: %+v\n", k, err)
@@ -189,12 +191,13 @@ func storeData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, key str
 		log.Debugf("set activity output result: %+v\n", value)
 		result.Value = value
 		ctx.SetOutput(ovResult, result)
+		ctx.SetOutput(ovKey, key)
 	}
 	return true, nil
 }
 
 // collect composite keys as specified in activity input 'ivCompositeKeys'
-func getCompositeKeys(ctx activity.Context, ccshim shim.ChaincodeStubInterface, value interface{}) ([]string, error) {
+func getCompositeKeys(ctx activity.Context, ccshim shim.ChaincodeStubInterface, key string, value interface{}) ([]string, error) {
 	// verify that value is a map
 	obj, ok := value.(map[string]interface{})
 	if !ok {
@@ -211,20 +214,20 @@ func getCompositeKeys(ctx activity.Context, ccshim shim.ChaincodeStubInterface, 
 			return nil, err
 		}
 		log.Debugf("Parsed composite keys: %+v\n", keyMap)
-		var keys []string
+		var compKeys []string
 		for k, v := range keyMap {
-			if ck := compositeKey(ccshim, k, v, obj); ck != "" {
-				keys = append(keys, ck)
+			if ck := compositeKey(ccshim, k, v, key, obj); ck != "" {
+				compKeys = append(compKeys, ck)
 			}
 		}
-		return keys, nil
+		return compKeys, nil
 	}
 	log.Debugf("No composite key is defined")
 	return nil, nil
 }
 
 // construct composite key if all specified attributes exist in the value object
-func compositeKey(ccshim shim.ChaincodeStubInterface, name string, attributes []string, value map[string]interface{}) string {
+func compositeKey(ccshim shim.ChaincodeStubInterface, name string, attributes []string, key string, value map[string]interface{}) string {
 	if name == "" || attributes == nil || len(attributes) == 0 {
 		log.Debugf("invalid composite key definition: name %s attributes %+v\n", name, attributes)
 		return ""
@@ -238,12 +241,21 @@ func compositeKey(ccshim shim.ChaincodeStubInterface, name string, attributes []
 			return ""
 		}
 	}
-	key, err := ccshim.CreateCompositeKey(name, keyValues)
+	if keyValues == nil || len(keyValues) == 0 {
+		log.Debug("No composite key attribute is found in state value\n")
+		return ""
+	}
+
+	// the last element of composite key should be the key itself
+	if key != keyValues[len(keyValues)-1] {
+		keyValues = append(keyValues, key)
+	}
+	compKey, err := ccshim.CreateCompositeKey(name, keyValues)
 	if err != nil {
 		log.Errorf("failed to create composite key %s with values %+v\n", name, keyValues)
 		return ""
 	}
-	return key
+	return compKey
 }
 
 // resolveFlowData resolves and returns data from the flow's context, unmarshals JSON string to map[string]interface{}.

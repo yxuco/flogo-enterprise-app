@@ -2,11 +2,11 @@
     "name": "fabric-transaction",
     "version": "1.0.0",
     "type": "flogo:trigger",
-    "title": "Hyperledger Fabric Transaction",
+    "title": "Transaction",
     "author": "TIBCO Software Inc.",
     "display": {
         "category": "fabric",
-        "description": "This trigger executes a Fabric transaction",
+        "description": "This trigger executes a Hyperledger Fabric transaction",
         "visible": true,
         "smallIcon": "icons/ic-fabric.png",
         "largeIcon": "icons/ic-fabric@2x.png",

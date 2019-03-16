@@ -68,8 +68,8 @@ export class putHandler extends WiServiceHandlerContribution {
                 if (dataField.value === null || dataField.value.value === null || dataField.value.value === "") {
                     vresult.setError("FABTIC-PUT-1010", "Data definition must not be empty");
                 } else {
-                    let valRes;
                     try {
+                        let valRes;
                         valRes = JSON.parse(dataField.value.value);
                         valRes = JSON.stringify(valRes);
                     } catch (e) {
