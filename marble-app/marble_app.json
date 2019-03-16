@@ -1,0 +1,371 @@
+{
+ "name": "marble_app",
+ "description": " ",
+ "version": "1.0.0",
+ "type": "flogo:app",
+ "appModel": "1.0.0",
+ "resources": [
+  {
+   "id": "flow:initMarble",
+   "data": {
+    "name": "initMarble",
+    "description": "",
+    "tasks": [
+     {
+      "id": "LogMessage",
+      "name": "LogMessage",
+      "activity": {
+       "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
+       "input": {
+        "flowInfo": "false",
+        "addToFlow": "false"
+       },
+       "output": {},
+       "mappings": {
+        "input": [
+         {
+          "mapTo": "$INPUT['message']",
+          "type": "expression",
+          "value": "string.concat(\"[initMarble] \", $flow.parameters.name, \" owner: \", $flow.parameters.owner)"
+         }
+        ]
+       }
+      }
+     },
+     {
+      "id": "Get",
+      "name": "Get",
+      "activity": {
+       "ref": "github.com/yxuco/flogo-enterprise-app/fabric/activity/get",
+       "input": {},
+       "output": {
+        "result": {
+         "metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"docType\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"color\":{\"type\":\"string\"},\"size\":{\"type\":\"number\"},\"owner\":{\"type\":\"string\"}}}",
+         "value": ""
+        }
+       },
+       "mappings": {
+        "input": [
+         {
+          "mapTo": "$INPUT['key']",
+          "type": "assign",
+          "value": "$flow.parameters.name"
+         }
+        ]
+       }
+      }
+     },
+     {
+      "id": "Put",
+      "name": "Put",
+      "activity": {
+       "ref": "github.com/yxuco/flogo-enterprise-app/fabric/activity/put",
+       "input": {
+        "valueType": "object",
+        "data": {
+         "metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"docType\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"color\":{\"type\":\"string\"},\"size\":{\"type\":\"number\"},\"owner\":{\"type\":\"string\"}}}",
+         "value": ""
+        },
+        "compositeKeys": "{\n    \"color~name\": [\"color\", \"name\"]\n}"
+       },
+       "output": {
+        "result": {
+         "metadata": "",
+         "value": ""
+        }
+       },
+       "mappings": {
+        "input": [
+         {
+          "mapTo": "$INPUT['key']",
+          "type": "assign",
+          "value": "$flow.parameters.name"
+         },
+         {
+          "mapTo": "$INPUT['data']['docType']",
+          "type": "literal",
+          "value": "marble"
+         },
+         {
+          "mapTo": "$INPUT['data']['name']",
+          "type": "assign",
+          "value": "$flow.parameters.name"
+         },
+         {
+          "mapTo": "$INPUT['data']['color']",
+          "type": "assign",
+          "value": "$flow.parameters.color"
+         },
+         {
+          "mapTo": "$INPUT['data']['size']",
+          "type": "assign",
+          "value": "$flow.parameters.size"
+         },
+         {
+          "mapTo": "$INPUT['data']['owner']",
+          "type": "assign",
+          "value": "$flow.parameters.owner"
+         }
+        ]
+       }
+      }
+     },
+     {
+      "id": "LogMessage1",
+      "name": "LogMessage1",
+      "activity": {
+       "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
+       "input": {
+        "flowInfo": "false",
+        "addToFlow": "false"
+       },
+       "output": {},
+       "mappings": {
+        "input": [
+         {
+          "mapTo": "$INPUT['message']",
+          "type": "expression",
+          "value": "string.concat(\"[initMarble] PUT: \", $activity[Put].message)"
+         }
+        ]
+       }
+      }
+     },
+     {
+      "id": "Return",
+      "name": "Return",
+      "activity": {
+       "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreturn",
+       "input": {
+        "mappings": [
+         {
+          "mapTo": "$INPUT['returns']['name']",
+          "type": "assign",
+          "value": "$activity[Put].result.name"
+         },
+         {
+          "mapTo": "$INPUT['returns']['color']",
+          "type": "assign",
+          "value": "$activity[Put].result.color"
+         },
+         {
+          "mapTo": "$INPUT['returns']['size']",
+          "type": "assign",
+          "value": "$activity[Put].result.size"
+         },
+         {
+          "mapTo": "$INPUT['returns']['owner']",
+          "type": "assign",
+          "value": "$activity[Put].result.owner"
+         }
+        ]
+       },
+       "output": {}
+      }
+     },
+     {
+      "id": "LogMessage2",
+      "name": "LogMessage2",
+      "activity": {
+       "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
+       "input": {
+        "flowInfo": "false",
+        "addToFlow": "false"
+       },
+       "output": {},
+       "mappings": {
+        "input": [
+         {
+          "mapTo": "$INPUT['message']",
+          "type": "expression",
+          "value": "string.concat(\"[initMarble] GET: \", $activity[Get].message)"
+         }
+        ]
+       }
+      }
+     },
+     {
+      "id": "ThrowError",
+      "name": "ThrowError",
+      "activity": {
+       "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/error",
+       "input": {},
+       "output": {},
+       "mappings": {
+        "input": [
+         {
+          "mapTo": "$INPUT['message']",
+          "type": "expression",
+          "value": "string.concat(\"Marble already exists: \", $activity[Get].key)"
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "links": [
+     {
+      "id": 1,
+      "from": "LogMessage",
+      "to": "Get",
+      "type": "default"
+     },
+     {
+      "id": 2,
+      "from": "Get",
+      "to": "Put",
+      "type": "expression",
+      "value": "$activity[Get].code == 300"
+     },
+     {
+      "id": 3,
+      "from": "Put",
+      "to": "LogMessage1",
+      "type": "default"
+     },
+     {
+      "id": 4,
+      "from": "LogMessage1",
+      "to": "Return",
+      "type": "default"
+     },
+     {
+      "id": 5,
+      "from": "Get",
+      "to": "LogMessage2",
+      "type": "expression",
+      "value": "$activity[Get].code == 200"
+     },
+     {
+      "id": 6,
+      "from": "LogMessage2",
+      "to": "ThrowError",
+      "type": "default"
+     }
+    ],
+    "metadata": {
+     "input": [
+      {
+       "name": "parameters",
+       "type": "complex_object",
+       "value": {
+        "value": "",
+        "metadata": "{\"name\":{\"type\":\"string\"},\"color\":{\"type\":\"string\"},\"size\":{\"type\":\"number\"},\"owner\":{\"type\":\"string\"}}"
+       }
+      },
+      {
+       "name": "txID",
+       "type": "string"
+      },
+      {
+       "name": "txTime",
+       "type": "string"
+      }
+     ],
+     "output": [
+      {
+       "name": "returns",
+       "type": "complex_object",
+       "value": {
+        "value": "",
+        "metadata": "{\"name\":{\"type\":\"string\"},\"color\":{\"type\":\"string\"},\"size\":{\"type\":\"number\"},\"owner\":{\"type\":\"string\"}}"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "triggers": [
+  {
+   "ref": "github.com/yxuco/flogo-enterprise-app/fabric/trigger/transaction",
+   "name": "Transaction",
+   "description": "",
+   "settings": {},
+   "id": "Transaction",
+   "handlers": [
+    {
+     "description": "",
+     "settings": {
+      "name": "initMarble",
+      "validation": false
+     },
+     "outputs": {
+      "parameters": {
+       "metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"color\":{\"type\":\"string\"},\"size\":{\"type\":\"number\"},\"owner\":{\"type\":\"string\"}}}",
+       "value": ""
+      },
+      "txID": "",
+      "txTime": "",
+      "_chaincode_stub": ""
+     },
+     "action": {
+      "ref": "github.com/TIBCOSoftware/flogo-contrib/action/flow",
+      "data": {
+       "flowURI": "res://flow:initMarble"
+      },
+      "mappings": {
+       "input": [
+        {
+         "mapTo": "$INPUT['parameters']['name']",
+         "type": "assign",
+         "value": "$.parameters.name"
+        },
+        {
+         "mapTo": "$INPUT['parameters']['color']",
+         "type": "assign",
+         "value": "$.parameters.color"
+        },
+        {
+         "mapTo": "$INPUT['parameters']['size']",
+         "type": "assign",
+         "value": "$.parameters.size"
+        },
+        {
+         "mapTo": "$INPUT['parameters']['owner']",
+         "type": "assign",
+         "value": "$.parameters.owner"
+        },
+        {
+         "mapTo": "$INPUT['txID']",
+         "type": "assign",
+         "value": "$.txID"
+        },
+        {
+         "mapTo": "$INPUT['txTime']",
+         "type": "assign",
+         "value": "$.txTime"
+        }
+       ],
+       "output": [
+        {
+         "mapTo": "$INPUT['returns']['name']",
+         "type": "assign",
+         "value": "$.returns.name"
+        },
+        {
+         "mapTo": "$INPUT['returns']['color']",
+         "type": "assign",
+         "value": "$.returns.color"
+        },
+        {
+         "mapTo": "$INPUT['returns']['size']",
+         "type": "assign",
+         "value": "$.returns.size"
+        },
+        {
+         "mapTo": "$INPUT['returns']['owner']",
+         "type": "assign",
+         "value": "$.returns.owner"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  }
+ ],
+ "properties": [],
+ "ui": "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",
+ "contrib": "W3sicmVmIjoiZ2l0aHViLmNvbS95eHVjby9mbG9nby1lbnRlcnByaXNlLWFwcC9mYWJyaWMiLCJzM2xvY2F0aW9uIjoie1VTRVJJRH0vZmFicmljIn0seyJyZWYiOiJnaXRodWIuY29tL1RJQkNPU29mdHdhcmUvZmxvZ28tY29udHJpYi9hY3Rpdml0eS9sb2ciLCJzM2xvY2F0aW9uIjoie1VTRVJJRH0vRGVmYXVsdC9hY3Rpdml0eS9sb2cifSx7InJlZiI6ImdpdGh1Yi5jb20vVElCQ09Tb2Z0d2FyZS9mbG9nby1jb250cmliL2FjdGl2aXR5L2Vycm9yIiwiczNsb2NhdGlvbiI6IntVU0VSSUR9L0RlZmF1bHQvYWN0aXZpdHkvZXJyb3IifV0="
+}
