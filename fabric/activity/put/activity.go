@@ -206,7 +206,7 @@ func getCompositeKeys(ctx activity.Context, ccshim shim.ChaincodeStubInterface, 
 	}
 
 	// check composite keys
-	if keyDefs, ok := ctx.GetInput(ivCompositeKeys).(string); ok {
+	if keyDefs, ok := ctx.GetInput(ivCompositeKeys).(string); ok && keyDefs != "" {
 		log.Debugf("Got composite key definitions: %s\n", keyDefs)
 		keyMap := make(map[string][]string)
 		if err := json.Unmarshal([]byte(keyDefs), &keyMap); err != nil {

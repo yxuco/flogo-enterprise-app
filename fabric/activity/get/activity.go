@@ -108,7 +108,7 @@ func retrievePrivateData(ctx activity.Context, ccshim shim.ChaincodeStubInterfac
 		return false, errors.Wrapf(err, "failed to retrieve data from private collection %s", collection)
 	}
 	if jsonBytes == nil {
-		log.Errorf("no data found for key %s on private collection %s\n", key, collection)
+		log.Infof("no data found for key %s on private collection %s\n", key, collection)
 		ctx.SetOutput(ovCode, 300)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found for key %s on private collection %s\n", key, collection))
 		ctx.SetOutput(ovKey, key)
@@ -145,7 +145,7 @@ func retrieveData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, key 
 		return false, errors.Wrapf(err, "failed to retrieve data for key %s", key)
 	}
 	if jsonBytes == nil {
-		log.Errorf("no data found for key %s\n", key)
+		log.Infof("no data found for key %s\n", key)
 		ctx.SetOutput(ovCode, 300)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found for key %s\n", key))
 		ctx.SetOutput(ovKey, key)

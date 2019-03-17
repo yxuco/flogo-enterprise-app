@@ -4,7 +4,7 @@ APP_FILE      := marble_app.json
 APP_NAME      := marble_cc
 LOG_LEVEL     := INFO
 CC_DEPLOY     := $(GOPATH)/src/github.com/hyperledger/fabric-samples/chaincode
-CONTRACT_PATH := $(dir $(SRC_PATH))/fabric-contract
+CONTRACT_PATH := $(dir $(SRC_PATH))fabric-contract
 
 .PHONY: all
 all: create build
