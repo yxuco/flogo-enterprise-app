@@ -15,18 +15,17 @@ import (
 )
 
 const (
-	ivStartKey      = "startKey"
-	ivEndKey        = "endKey"
-	ivPageSize      = "pageSize"
-	ivBookmark      = "start"
-	ivIsPrivate     = "isPrivate"
-	ivCollection    = "collection"
-	ivCompositeKeys = "compositeKeys"
-	ovCode          = "code"
-	ovMessage       = "message"
-	ovBookmark      = "bookmark"
-	ovCount         = "count"
-	ovResult        = "result"
+	ivStartKey   = "startKey"
+	ivEndKey     = "endKey"
+	ivPageSize   = "pageSize"
+	ivBookmark   = "start"
+	ivIsPrivate  = "isPrivate"
+	ivCollection = "collection"
+	ovCode       = "code"
+	ovMessage    = "message"
+	ovBookmark   = "bookmark"
+	ovCount      = "count"
+	ovResult     = "result"
 )
 
 // Create a new logger
