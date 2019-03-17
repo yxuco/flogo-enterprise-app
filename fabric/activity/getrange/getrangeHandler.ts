@@ -38,7 +38,7 @@ export class getrangeHandler extends WiServiceHandlerContribution {
                 vresult.setVisible(false);
             }
             return vresult;
-        } else if (fieldName === "start" || fieldName === "count" || fieldName === "bookmark") {
+        } else if (fieldName === "start" || fieldName === "bookmark") {
             let vresult: IValidationResult = ValidationResult.newValidationResult();
             let pageSizeField: IFieldDefinition = context.getField("pageSize");
             let valueField: IFieldDefinition = context.getField(fieldName);

@@ -38,7 +38,7 @@ export class getbycompositekeyHandler extends WiServiceHandlerContribution {
                 vresult.setVisible(false);
             }
             return vresult;
-        } else if (fieldName === "start" || fieldName === "bookmark" || fieldName === "count") {
+        } else if (fieldName === "start" || fieldName === "bookmark") {
             let vresult: IValidationResult = ValidationResult.newValidationResult();
             let pageSizeField: IFieldDefinition = context.getField("pageSize");
             let valueField: IFieldDefinition = context.getField(fieldName);
