@@ -50,15 +50,6 @@
             "type": "string"
         },
         {
-            "name": "closed",
-            "type": "boolean",
-            "display": {
-                "name": "Close resultset",
-                "description": "Close resultset after this page of records",
-                "visible": false            },
-            "value": true
-        },
-        {
             "name": "isPrivate",
             "type": "boolean",
             "required": true,
@@ -91,6 +82,10 @@
         {
             "name": "bookmark",
             "type": "string"
+        },
+        {
+            "name": "count",
+            "type": "integer"
         },
         {
             "name": "result",

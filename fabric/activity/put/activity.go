@@ -47,7 +47,7 @@ type FabricPutActivity struct {
 	metadata *activity.Metadata
 }
 
-// NewActivity creates a new PutActivity
+// NewActivity creates a new FabricPutActivity
 func NewActivity(metadata *activity.Metadata) activity.Activity {
 	return &FabricPutActivity{metadata: metadata}
 }
