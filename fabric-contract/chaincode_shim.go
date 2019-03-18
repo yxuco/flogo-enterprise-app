@@ -10,6 +10,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/engine"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/protos/peer"
+	"github.com/yxuco/flogo-enterprise-app/fabric/common"
 	trigger "github.com/yxuco/flogo-enterprise-app/fabric/trigger/transaction"
 )
 
@@ -49,15 +50,7 @@ var cp app.ConfigProvider
 
 // main function starts up the chaincode in the container during instantiate
 func main() {
-	loglevel := "DEBUG"
-	if l, ok := os.LookupEnv("CORE_CHAINCODE_LOGGING_LEVEL"); ok {
-		loglevel = l
-	}
-	if level, err := shim.LogLevel(loglevel); err != nil {
-		logger.SetLevel(level)
-	} else {
-		logger.SetLevel(shim.LogDebug)
-	}
+	common.SetChaincodeLogLevel(logger)
 
 	// configure flogo engine
 	if cp == nil {
@@ -75,7 +68,7 @@ func main() {
 	// this is a workaround until flogo-lib can accept pass-through flow attributes in
 	// handler.Handle(context.Background(), triggerData) that bypasses the mapper.
 	// see issue: https://github.com/TIBCOSoftware/flogo-lib/issues/267
-	inputAssignMap(ac, fabricTrigger, trigger.FabricStub)
+	inputAssignMap(ac, fabricTrigger, common.FabricStub)
 	e, err := engine.New(ac)
 	if err != nil {
 		fmt.Printf("Failed to create flogo engine instance: %+v\n", err)

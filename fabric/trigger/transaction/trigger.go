@@ -1,13 +1,10 @@
 package transaction
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -18,6 +15,7 @@ import (
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	jschema "github.com/xeipuuv/gojsonschema"
+	"github.com/yxuco/flogo-enterprise-app/fabric/common"
 )
 
 const (
@@ -29,24 +27,13 @@ const (
 	oTxID        = "txID"
 	oTxTime      = "txTime"
 	rReturns     = "returns"
-
-	// FabricStub is the name of flow property for passing chaincode stub to activities
-	FabricStub = "_chaincode_stub"
 )
 
 // Create a new logger
 var log = shim.NewLogger("trigger-fabric-transaction")
 
 func init() {
-	loglevel := "DEBUG"
-	if l, ok := os.LookupEnv("CORE_CHAINCODE_LOGGING_LEVEL"); ok {
-		loglevel = l
-	}
-	if level, err := shim.LogLevel(loglevel); err != nil {
-		log.SetLevel(level)
-	} else {
-		log.SetLevel(shim.LogDebug)
-	}
+	common.SetChaincodeLogLevel(log)
 }
 
 // TriggerMap maps transaction name in trigger handler setting to the trigger,
@@ -72,16 +59,7 @@ func NewFactory(md *trigger.Metadata) trigger.Factory {
 
 // New Creates a new trigger instance for a given id
 func (t *TriggerFactory) New(config *trigger.Config) trigger.Trigger {
-	return &Trigger{metadata: t.metadata, config: config, parameters: map[string][]ParameterIndex{}}
-}
-
-// ParameterIndex stores transaction parameters and its location in raw JSON schema string
-// start and end location is used to sort the parameter list to match the parameter order in schema
-type ParameterIndex struct {
-	name     string
-	jsonType string
-	start    int
-	end      int
+	return &Trigger{metadata: t.metadata, config: config, parameters: map[string][]common.ParameterIndex{}}
 }
 
 // Trigger is a stub for the Trigger implementation
@@ -89,7 +67,7 @@ type Trigger struct {
 	metadata   *trigger.Metadata
 	config     *trigger.Config
 	handlers   []*trigger.Handler
-	parameters map[string][]ParameterIndex
+	parameters map[string][]common.ParameterIndex
 }
 
 // Initialize implements trigger.Init.Initialize
@@ -109,7 +87,7 @@ func (t *Trigger) Initialize(ctx trigger.InitContext) error {
 		if ok {
 			// cache transaction parameters for each handler.
 			// Note: Flogo enterprise uses one handler per flow, but share the same trigger instance
-			if index, err := objectParameters([]byte(params.Metadata)); err == nil {
+			if index, err := common.OrderedParameters([]byte(params.Metadata)); err == nil {
 				if index != nil {
 					log.Debugf("cache parameters for flow %s: %+v\n", name, index)
 					t.parameters[name] = index
@@ -146,94 +124,6 @@ func (t *Trigger) Start() error {
 func (t *Trigger) Stop() error {
 	// stop the trigger
 	return nil
-}
-
-// addIndex adds a new parameter position to the index, ignore or merge index if index region overlaps.
-func addIndex(parameters []ParameterIndex, param ParameterIndex) []ParameterIndex {
-	for i, v := range parameters {
-		if param.start > v.start && param.start < v.end {
-			// ignore if new param's start postion falls in region covered by a known parameter
-			return parameters
-		} else if v.start > param.start && v.start < param.end {
-			// replace old parameter region if its start position falls in the region covered by the new parameter
-			updated := append(parameters[:i], param)
-			if len(parameters) > i+1 {
-				// check the remaining knonw parameters
-				for _, p := range parameters[i+1:] {
-					if !(p.start > param.start && p.start < param.end) {
-						updated = append(updated, p)
-					}
-				}
-			}
-			return updated
-		}
-	}
-	// append new parameter
-	return append(parameters, param)
-}
-
-// extract ordered parameters from schema definition
-func objectParameters(schemaData []byte) ([]ParameterIndex, error) {
-	// extract root object properties from JSON schema
-	var rawProperties struct {
-		Data json.RawMessage `json:"properties"`
-	}
-	if err := json.Unmarshal(schemaData, &rawProperties); err != nil {
-		log.Errorf("failed to extract properties from metadata: %+v", err)
-		return nil, err
-	}
-
-	// extract parameter names from raw object properties
-	var params map[string]json.RawMessage
-	if err := json.Unmarshal(rawProperties.Data, &params); err != nil {
-		log.Errorf("failed to extract parameters from object schema: %+v", err)
-		return nil, err
-	}
-
-	// collect parameter locations in the raw object schema
-	var paramIndex []ParameterIndex
-	for p, v := range params {
-		// encode parameter name with quotes
-		key, _ := json.Marshal(p)
-		// key may exist in raw schema multiple times,
-		// so check each occurence to determine its correct location in the raw schema
-		items := bytes.Split(rawProperties.Data, key)
-		pos := 0
-		for _, seg := range items {
-			if pos == 0 {
-				// first segment should not be the key definition
-				pos += len(seg)
-				continue
-			}
-			vpos := bytes.Index(seg, v)
-			if vpos >= 0 {
-				// the segment contains the key definition, so collect its position in raw schema
-				endPos := pos + len(key) + vpos + len(v)
-				// extract JSON type of the parameter
-				var paramDef struct {
-					RawType string `json:"type"`
-				}
-				if err := json.Unmarshal(v, &paramDef); err != nil {
-					log.Errorf("failed to extract JSON type of parameter %s: %+v", p, err)
-				}
-				paramType := jschema.TYPE_OBJECT
-				if paramDef.RawType != "" {
-					paramType = paramDef.RawType
-				}
-				log.Debugf("add index parameter '%s' type '%s'\n", p, paramType)
-				paramIndex = addIndex(paramIndex, ParameterIndex{name: p, jsonType: paramType, start: pos, end: endPos})
-			}
-			pos += len(key) + len(seg)
-		}
-	}
-
-	// sort parameter index by start location in raw schema
-	if len(paramIndex) > 1 {
-		sort.Slice(paramIndex, func(i, j int) bool {
-			return paramIndex[i].start < paramIndex[j].start
-		})
-	}
-	return paramIndex, nil
 }
 
 // Invoke starts the trigger and invokes the action registered in the handler,
@@ -284,7 +174,7 @@ func (t *Trigger) Invoke(stub shim.ChaincodeStubInterface, fn string, args []str
 			triggerData[oTransient] = transMap
 		}
 
-		triggerData[FabricStub] = stub
+		triggerData[common.FabricStub] = stub
 		triggerData[oTxID] = stub.GetTxID()
 		if ts, err := stub.GetTxTimestamp(); err == nil {
 			triggerData[oTxTime] = time.Unix(ts.Seconds, int64(ts.Nanos)).UTC().Format("2006-01-02T15:04:05.000000-0700")
@@ -340,7 +230,7 @@ func prepareTransient(stub shim.ChaincodeStubInterface) (map[string]interface{},
 }
 
 // construct trigger output parameters for specified parameter index, and values of the parameters
-func prepareParameters(paramIndex []ParameterIndex, values []string) (interface{}, error) {
+func prepareParameters(paramIndex []common.ParameterIndex, values []string) (interface{}, error) {
 	log.Debugf("prepare parameters %+v values %+v", paramIndex, values)
 	if paramIndex == nil && len(values) > 0 {
 		// unknown parameter schema
@@ -357,8 +247,8 @@ func prepareParameters(paramIndex []ParameterIndex, values []string) (interface{
 	if values != nil && len(values) > 0 {
 		// populate input args
 		for i, v := range values {
-			if obj := unmarshalString(v, paramIndex[i].jsonType, paramIndex[i].name); obj != nil {
-				result[paramIndex[i].name] = obj
+			if obj := unmarshalString(v, paramIndex[i].JSONType, paramIndex[i].Name); obj != nil {
+				result[paramIndex[i].Name] = obj
 			}
 		}
 	}

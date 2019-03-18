@@ -1,17 +1,15 @@
 package getrange
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
-	trigger "github.com/yxuco/flogo-enterprise-app/fabric/trigger/transaction"
+	"github.com/yxuco/flogo-enterprise-app/fabric/common"
 )
 
 const (
@@ -32,15 +30,7 @@ const (
 var log = shim.NewLogger("activity-fabric-getrange")
 
 func init() {
-	loglevel := "DEBUG"
-	if l, ok := os.LookupEnv("CORE_CHAINCODE_LOGGING_LEVEL"); ok {
-		loglevel = l
-	}
-	if level, err := shim.LogLevel(loglevel); err != nil {
-		log.SetLevel(level)
-	} else {
-		log.SetLevel(shim.LogDebug)
-	}
+	common.SetChaincodeLogLevel(log)
 }
 
 // FabricRangeActivity is a stub for executing Hyperledger Fabric getRange operations
@@ -79,29 +69,20 @@ func (a *FabricRangeActivity) Eval(ctx activity.Context) (done bool, err error) 
 	log.Debugf("end key: %s\n", endKey)
 
 	// get chaincode stub
-	stub, err := resolveFlowData("$flow."+trigger.FabricStub, ctx)
+	stub, err := common.GetChaincodeStub(ctx)
 	if err != nil || stub == nil {
-		log.Errorf("failed to get stub: %+v\n", err)
 		ctx.SetOutput(ovCode, 500)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to get stub: %+v", err))
-		return false, errors.Errorf("failed to get stub: %+v", err)
-	}
-
-	ccshim, ok := stub.(shim.ChaincodeStubInterface)
-	if !ok {
-		log.Errorf("stub type %T is not a ChaincodeStubInterface\n", stub)
-		ctx.SetOutput(ovCode, 500)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("stub type %T is not a ChaincodeStubInterface", stub))
-		return false, errors.Errorf("stub type %T is not a ChaincodeStubInterface", stub)
+		ctx.SetOutput(ovMessage, err.Error())
+		return false, err
 	}
 
 	if isPrivate, ok := ctx.GetInput(ivIsPrivate).(bool); ok && isPrivate {
 		// retrieve data range from a private collection
-		return retrievePrivateRange(ctx, ccshim, startKey, endKey)
+		return retrievePrivateRange(ctx, stub, startKey, endKey)
 	}
 
 	// retrieve data range [startKey, endKey)
-	return retrieveRange(ctx, ccshim, startKey, endKey)
+	return retrieveRange(ctx, stub, startKey, endKey)
 }
 
 func retrievePrivateRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, startKey, endKey string) (bool, error) {
@@ -135,15 +116,13 @@ func retrievePrivateRange(ctx activity.Context, ccshim shim.ChaincodeStubInterfa
 	if err != nil {
 		log.Errorf("failed to retrieve data range [%s, %s) from private collection %s: %+v\n", startKey, endKey, collection, err)
 		ctx.SetOutput(ovCode, 500)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to retrieve data range [%s, %s) from private collection %s: %+v\n", startKey, endKey, collection, err))
+		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to retrieve data range [%s, %s) from private collection %s: %+v", startKey, endKey, collection, err))
 		return false, errors.Wrapf(err, "failed to retrieve data range [%s, %s) from private collection %s", startKey, endKey, collection)
 	}
 	defer resultIterator.Close()
 
-	var jsonBytes []byte
-	if buffer, err := constructQueryResponse(resultIterator); err == nil {
-		jsonBytes = buffer.Bytes()
-	} else {
+	jsonBytes, err := common.ConstructQueryResponse(resultIterator, false, nil)
+	if err != nil {
 		log.Errorf("failed to collect result from iteragor: %+v\n", err)
 		ctx.SetOutput(ovCode, 500)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to collect result from iterator: %+v", err))
@@ -153,7 +132,7 @@ func retrievePrivateRange(ctx activity.Context, ccshim shim.ChaincodeStubInterfa
 	if jsonBytes == nil {
 		log.Infof("no data found in key range [%s, %s) from private collection %s\n", startKey, endKey, collection)
 		ctx.SetOutput(ovCode, 300)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found in key range [%s, %s] from private collection %s\n", startKey, endKey, collection))
+		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found in key range [%s, %s) from private collection %s", startKey, endKey, collection))
 		ctx.SetOutput(ovCount, 0)
 		return true, nil
 	}
@@ -205,23 +184,21 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 		if resultIterator, resultMetadata, err = ccshim.GetStateByRangeWithPagination(startKey, endKey, pageSize, bookmark); err != nil {
 			log.Errorf("failed to retrieve data range [%s, %s) with page size %d: %+v\n", startKey, endKey, pageSize, err)
 			ctx.SetOutput(ovCode, 500)
-			ctx.SetOutput(ovMessage, fmt.Sprintf("failed to retrieve data range [%s, %s) with page size %d: %+v\n", startKey, endKey, pageSize, err))
+			ctx.SetOutput(ovMessage, fmt.Sprintf("failed to retrieve data range [%s, %s) with page size %d: %+v", startKey, endKey, pageSize, err))
 			return false, errors.Wrapf(err, "failed to retrieve data range [%s, %s) with page size %d", startKey, endKey, pageSize)
 		}
 	} else {
 		if resultIterator, err = ccshim.GetStateByRange(startKey, endKey); err != nil {
 			log.Errorf("failed to retrieve data range [%s, %s): %+v\n", startKey, endKey, err)
 			ctx.SetOutput(ovCode, 500)
-			ctx.SetOutput(ovMessage, fmt.Sprintf("failed to retrieve data range [%s, %s): %+v\n", startKey, endKey, err))
+			ctx.SetOutput(ovMessage, fmt.Sprintf("failed to retrieve data range [%s, %s): %+v", startKey, endKey, err))
 			return false, errors.Wrapf(err, "failed to retrieve data range [%s, %s)", startKey, endKey)
 		}
 	}
 	defer resultIterator.Close()
 
-	var jsonBytes []byte
-	if buffer, err := constructQueryResponse(resultIterator); err == nil {
-		jsonBytes = buffer.Bytes()
-	} else {
+	jsonBytes, err := common.ConstructQueryResponse(resultIterator, false, nil)
+	if err != nil {
 		log.Errorf("failed to collect result from iteragor: %+v\n", err)
 		ctx.SetOutput(ovCode, 500)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to collect result from iterator: %+v", err))
@@ -229,9 +206,9 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 	}
 
 	if jsonBytes == nil {
-		log.Infof("no data found in key range [%s, %s]\n", startKey, endKey)
+		log.Infof("no data found in key range [%s, %s)\n", startKey, endKey)
 		ctx.SetOutput(ovCode, 300)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found in key range [%s, %s)\n", startKey, endKey))
+		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found in key range [%s, %s)", startKey, endKey))
 		ctx.SetOutput(ovCount, 0)
 		return true, nil
 	}
@@ -264,45 +241,4 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 		}
 	}
 	return true, nil
-}
-
-// resolveFlowData resolves and returns data from the flow's context, unmarshals JSON string to map[string]interface{}.
-// The name to Resolve is a valid output attribute of a flogo activity, e.g., `activity[app_16].value` or `$flow.content`,
-// which is shown in normal flogo mapper as, e.g., "$flow.content"
-func resolveFlowData(toResolve string, context activity.Context) (value interface{}, err error) {
-	actionCtx := context.ActivityHost()
-	log.Debugf("Fabric context data: %+v", actionCtx.WorkingData())
-	actValue, err := actionCtx.GetResolver().Resolve(toResolve, actionCtx.WorkingData())
-	return actValue, err
-}
-
-func constructQueryResponse(resultsIterator shim.StateQueryIteratorInterface) (*bytes.Buffer, error) {
-	// buffer is a JSON array containing QueryResults
-	var buffer bytes.Buffer
-	buffer.WriteString("[")
-
-	bArrayMemberAlreadyWritten := false
-	for resultsIterator.HasNext() {
-		queryResponse, err := resultsIterator.Next()
-		if err != nil {
-			return nil, err
-		}
-		// Add a comma before array members, suppress it for the first array member
-		if bArrayMemberAlreadyWritten == true {
-			buffer.WriteString(",")
-		}
-		buffer.WriteString("{\"key\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(queryResponse.Key)
-		buffer.WriteString("\"")
-
-		buffer.WriteString(", \"value\":")
-		// Record is a JSON object, so we write as-is
-		buffer.WriteString(string(queryResponse.Value))
-		buffer.WriteString("}")
-		bArrayMemberAlreadyWritten = true
-	}
-	buffer.WriteString("]")
-
-	return &buffer, nil
 }

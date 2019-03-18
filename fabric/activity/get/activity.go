@@ -3,39 +3,29 @@ package get
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/pkg/errors"
-	trigger "github.com/yxuco/flogo-enterprise-app/fabric/trigger/transaction"
+	"github.com/yxuco/flogo-enterprise-app/fabric/common"
 )
 
 const (
-	ivKey           = "key"
-	ivIsPrivate     = "isPrivate"
-	ivCollection    = "collection"
-	ivCompositeKeys = "compositeKeys"
-	ovCode          = "code"
-	ovMessage       = "message"
-	ovKey           = "key"
-	ovResult        = "result"
+	ivKey        = "key"
+	ivIsPrivate  = "isPrivate"
+	ivCollection = "collection"
+	ovCode       = "code"
+	ovMessage    = "message"
+	ovKey        = "key"
+	ovResult     = "result"
 )
 
 // Create a new logger
 var log = shim.NewLogger("activity-fabric-get")
 
 func init() {
-	loglevel := "DEBUG"
-	if l, ok := os.LookupEnv("CORE_CHAINCODE_LOGGING_LEVEL"); ok {
-		loglevel = l
-	}
-	if level, err := shim.LogLevel(loglevel); err != nil {
-		log.SetLevel(level)
-	} else {
-		log.SetLevel(shim.LogDebug)
-	}
+	common.SetChaincodeLogLevel(log)
 }
 
 // FabricGetActivity is a stub for executing Hyperledger Fabric put operations
@@ -66,29 +56,20 @@ func (a *FabricGetActivity) Eval(ctx activity.Context) (done bool, err error) {
 	log.Debugf("state key: %s\n", key)
 
 	// get chaincode stub
-	stub, err := resolveFlowData("$flow."+trigger.FabricStub, ctx)
+	stub, err := common.GetChaincodeStub(ctx)
 	if err != nil || stub == nil {
-		log.Errorf("failed to get stub: %+v\n", err)
 		ctx.SetOutput(ovCode, 500)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to get stub: %+v", err))
-		return false, errors.Errorf("failed to get stub: %+v", err)
-	}
-
-	ccshim, ok := stub.(shim.ChaincodeStubInterface)
-	if !ok {
-		log.Errorf("stub type %T is not a ChaincodeStubInterface\n", stub)
-		ctx.SetOutput(ovCode, 500)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("stub type %T is not a ChaincodeStubInterface", stub))
-		return false, errors.Errorf("stub type %T is not a ChaincodeStubInterface", stub)
+		ctx.SetOutput(ovMessage, err.Error())
+		return false, err
 	}
 
 	if isPrivate, ok := ctx.GetInput(ivIsPrivate).(bool); ok && isPrivate {
 		// retrieve data from a private collection
-		return retrievePrivateData(ctx, ccshim, key)
+		return retrievePrivateData(ctx, stub, key)
 	}
 
 	// retrieve data for the key
-	return retrieveData(ctx, ccshim, key)
+	return retrieveData(ctx, stub, key)
 }
 
 func retrievePrivateData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, key string) (bool, error) {
@@ -110,7 +91,7 @@ func retrievePrivateData(ctx activity.Context, ccshim shim.ChaincodeStubInterfac
 	if jsonBytes == nil {
 		log.Infof("no data found for key %s on private collection %s\n", key, collection)
 		ctx.SetOutput(ovCode, 300)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found for key %s on private collection %s\n", key, collection))
+		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found for key %s on private collection %s", key, collection))
 		ctx.SetOutput(ovKey, key)
 		return true, nil
 	}
@@ -147,7 +128,7 @@ func retrieveData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, key 
 	if jsonBytes == nil {
 		log.Infof("no data found for key %s\n", key)
 		ctx.SetOutput(ovCode, 300)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found for key %s\n", key))
+		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found for key %s", key))
 		ctx.SetOutput(ovKey, key)
 		return true, nil
 	}
@@ -170,14 +151,4 @@ func retrieveData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, key 
 		ctx.SetOutput(ovKey, key)
 	}
 	return true, nil
-}
-
-// resolveFlowData resolves and returns data from the flow's context, unmarshals JSON string to map[string]interface{}.
-// The name to Resolve is a valid output attribute of a flogo activity, e.g., `activity[app_16].value` or `$flow.content`,
-// which is shown in normal flogo mapper as, e.g., "$flow.content"
-func resolveFlowData(toResolve string, context activity.Context) (value interface{}, err error) {
-	actionCtx := context.ActivityHost()
-	log.Debugf("Fabric context data: %+v", actionCtx.WorkingData())
-	actValue, err := actionCtx.GetResolver().Resolve(toResolve, actionCtx.WorkingData())
-	return actValue, err
 }

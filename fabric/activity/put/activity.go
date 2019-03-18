@@ -3,13 +3,12 @@ package put
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/pkg/errors"
-	trigger "github.com/yxuco/flogo-enterprise-app/fabric/trigger/transaction"
+	"github.com/yxuco/flogo-enterprise-app/fabric/common"
 )
 
 const (
@@ -31,15 +30,7 @@ const (
 var log = shim.NewLogger("activity-fabric-put")
 
 func init() {
-	loglevel := "DEBUG"
-	if l, ok := os.LookupEnv("CORE_CHAINCODE_LOGGING_LEVEL"); ok {
-		loglevel = l
-	}
-	if level, err := shim.LogLevel(loglevel); err != nil {
-		log.SetLevel(level)
-	} else {
-		log.SetLevel(shim.LogDebug)
-	}
+	common.SetChaincodeLogLevel(log)
 }
 
 // FabricPutActivity is a stub for executing Hyperledger Fabric put operations
@@ -84,29 +75,20 @@ func (a *FabricPutActivity) Eval(ctx activity.Context) (done bool, err error) {
 	log.Debugf("input value type %T: %+v\n", value, value)
 
 	// get chaincode stub
-	stub, err := resolveFlowData("$flow."+trigger.FabricStub, ctx)
+	stub, err := common.GetChaincodeStub(ctx)
 	if err != nil || stub == nil {
-		log.Errorf("failed to get stub: %+v\n", err)
 		ctx.SetOutput(ovCode, 500)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to get stub: %+v", err))
-		return false, errors.Errorf("failed to get stub: %+v", err)
-	}
-
-	ccshim, ok := stub.(shim.ChaincodeStubInterface)
-	if !ok {
-		log.Errorf("stub type %T is not a ChaincodeStubInterface\n", stub)
-		ctx.SetOutput(ovCode, 500)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("stub type %T is not a ChaincodeStubInterface", stub))
-		return false, errors.Errorf("stub type %T is not a ChaincodeStubInterface", stub)
+		ctx.SetOutput(ovMessage, err.Error())
+		return false, err
 	}
 
 	if isPrivate, ok := ctx.GetInput(ivIsPrivate).(bool); ok && isPrivate {
 		// store data on a private collection
-		return storePrivateData(ctx, ccshim, key, value)
+		return storePrivateData(ctx, stub, key, value)
 	}
 
 	// store data on the ledger
-	return storeData(ctx, ccshim, key, value)
+	return storeData(ctx, stub, key, value)
 }
 
 func storePrivateData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, key string, value interface{}) (bool, error) {
@@ -256,14 +238,4 @@ func compositeKey(ccshim shim.ChaincodeStubInterface, name string, attributes []
 		return ""
 	}
 	return compKey
-}
-
-// resolveFlowData resolves and returns data from the flow's context, unmarshals JSON string to map[string]interface{}.
-// The name to Resolve is a valid output attribute of a flogo activity, e.g., `activity[app_16].value` or `$flow.content`,
-// which is shown in normal flogo mapper as, e.g., "$flow.content"
-func resolveFlowData(toResolve string, context activity.Context) (value interface{}, err error) {
-	actionCtx := context.ActivityHost()
-	log.Debugf("Fabric context data: %+v", actionCtx.WorkingData())
-	actValue, err := actionCtx.GetResolver().Resolve(toResolve, actionCtx.WorkingData())
-	return actValue, err
 }
