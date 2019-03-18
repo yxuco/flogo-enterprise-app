@@ -19,7 +19,7 @@
             "type": "complex_object",
             "display": {
                 "name": "Key-value pairs",
-                "description": "Schema definition of array of key-value pairs, e.g.,\r\n{\r\n  \"key\": \"string\",\r\n  \"value\": {\"field1\": \"\", \"field2\": 0}\r\n}",
+                "description": "Schema definition of array of key-value pairs, e.g.,\r\n[{\r\n  \"key\": \"string\",\r\n  \"value\": {\"field1\": \"\", \"field2\": 0}\r\n}]",
                 "type": "texteditor",
                 "syntax": "json",
                 "mappable": true
