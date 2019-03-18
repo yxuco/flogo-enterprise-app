@@ -23,12 +23,9 @@ export class putallHandler extends WiServiceHandlerContribution {
 
     value = (fieldName: string, context: IActivityContribution): Observable<any> | any => {
         if (fieldName === "result") {
-            let valueTypeField: IFieldDefinition = context.getField("valueType");
-            if (valueTypeField.value && valueTypeField.value === "object") {
-                let dataField: IFieldDefinition = context.getField("data");
-                if (dataField && dataField.value && dataField.value.value) {
-                    return dataField.value.value;
-                }
+            let dataField: IFieldDefinition = context.getField("data");
+            if (dataField && dataField.value && dataField.value.value) {
+                return dataField.value.value;
             }
         }
         return null;
