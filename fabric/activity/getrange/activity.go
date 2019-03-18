@@ -100,7 +100,7 @@ func (a *FabricRangeActivity) Eval(ctx activity.Context) (done bool, err error) 
 		return retrievePrivateRange(ctx, ccshim, startKey, endKey)
 	}
 
-	// retrieve data range [startKey, endKey]
+	// retrieve data range [startKey, endKey)
 	return retrieveRange(ctx, ccshim, startKey, endKey)
 }
 
@@ -127,16 +127,16 @@ func retrievePrivateRange(ctx activity.Context, ccshim shim.ChaincodeStubInterfa
 		return false, errors.New("private collection is not specified")
 	}
 
-	// retrieve private data range [startKey, endKey]
+	// retrieve private data range [startKey, endKey)
 	if pageSize > 0 {
 		log.Infof("private data query does not support pagination, so ignore specified page size %d and bookmark %s\n", pageSize, bookmark)
 	}
 	resultIterator, err := ccshim.GetPrivateDataByRange(collection, startKey, endKey)
 	if err != nil {
-		log.Errorf("failed to retrieve data range [%s, %s] from private collection %s: %+v\n", startKey, endKey, collection, err)
+		log.Errorf("failed to retrieve data range [%s, %s) from private collection %s: %+v\n", startKey, endKey, collection, err)
 		ctx.SetOutput(ovCode, 500)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to retrieve data range [%s, %s] from private collection %s: %+v\n", startKey, endKey, collection, err))
-		return false, errors.Wrapf(err, "failed to retrieve data range [%s, %s] from private collection %s", startKey, endKey, collection)
+		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to retrieve data range [%s, %s) from private collection %s: %+v\n", startKey, endKey, collection, err))
+		return false, errors.Wrapf(err, "failed to retrieve data range [%s, %s) from private collection %s", startKey, endKey, collection)
 	}
 	defer resultIterator.Close()
 
@@ -151,7 +151,7 @@ func retrievePrivateRange(ctx activity.Context, ccshim shim.ChaincodeStubInterfa
 	}
 
 	if jsonBytes == nil {
-		log.Infof("no data found in key range [%s, %s] from private collection %s\n", startKey, endKey, collection)
+		log.Infof("no data found in key range [%s, %s) from private collection %s\n", startKey, endKey, collection)
 		ctx.SetOutput(ovCode, 300)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found in key range [%s, %s] from private collection %s\n", startKey, endKey, collection))
 		ctx.SetOutput(ovCount, 0)
@@ -168,7 +168,7 @@ func retrievePrivateRange(ctx activity.Context, ccshim shim.ChaincodeStubInterfa
 	}
 
 	ctx.SetOutput(ovCode, 200)
-	ctx.SetOutput(ovMessage, fmt.Sprintf("retrieved data in key range [%s, %s] from private collection %s: %s", startKey, endKey, collection, string(jsonBytes)))
+	ctx.SetOutput(ovMessage, fmt.Sprintf("retrieved data in key range [%s, %s) from private collection %s: %s", startKey, endKey, collection, string(jsonBytes)))
 	if result, ok := ctx.GetOutput(ovResult).(*data.ComplexObject); ok && result != nil {
 		log.Debugf("set activity output result: %+v\n", value)
 		result.Value = value
@@ -197,23 +197,23 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 		}
 	}
 
-	// retrieve data range [startKey, endKey]
+	// retrieve data range [startKey, endKey)
 	var resultIterator shim.StateQueryIteratorInterface
 	var resultMetadata *pb.QueryResponseMetadata
 	var err error
 	if pageSize > 0 {
 		if resultIterator, resultMetadata, err = ccshim.GetStateByRangeWithPagination(startKey, endKey, pageSize, bookmark); err != nil {
-			log.Errorf("failed to retrieve data range [%s, %s] with page size %d: %+v\n", startKey, endKey, pageSize, err)
+			log.Errorf("failed to retrieve data range [%s, %s) with page size %d: %+v\n", startKey, endKey, pageSize, err)
 			ctx.SetOutput(ovCode, 500)
-			ctx.SetOutput(ovMessage, fmt.Sprintf("failed to retrieve data range [%s, %s] with page size %d: %+v\n", startKey, endKey, pageSize, err))
-			return false, errors.Wrapf(err, "failed to retrieve data range [%s, %s] with page size %d", startKey, endKey, pageSize)
+			ctx.SetOutput(ovMessage, fmt.Sprintf("failed to retrieve data range [%s, %s) with page size %d: %+v\n", startKey, endKey, pageSize, err))
+			return false, errors.Wrapf(err, "failed to retrieve data range [%s, %s) with page size %d", startKey, endKey, pageSize)
 		}
 	} else {
 		if resultIterator, err = ccshim.GetStateByRange(startKey, endKey); err != nil {
-			log.Errorf("failed to retrieve data range [%s, %s]: %+v\n", startKey, endKey, err)
+			log.Errorf("failed to retrieve data range [%s, %s): %+v\n", startKey, endKey, err)
 			ctx.SetOutput(ovCode, 500)
-			ctx.SetOutput(ovMessage, fmt.Sprintf("failed to retrieve data range [%s, %s]: %+v\n", startKey, endKey, err))
-			return false, errors.Wrapf(err, "failed to retrieve data range [%s, %s]", startKey, endKey)
+			ctx.SetOutput(ovMessage, fmt.Sprintf("failed to retrieve data range [%s, %s): %+v\n", startKey, endKey, err))
+			return false, errors.Wrapf(err, "failed to retrieve data range [%s, %s)", startKey, endKey)
 		}
 	}
 	defer resultIterator.Close()
@@ -231,7 +231,7 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 	if jsonBytes == nil {
 		log.Infof("no data found in key range [%s, %s]\n", startKey, endKey)
 		ctx.SetOutput(ovCode, 300)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found in key range [%s, %s]\n", startKey, endKey))
+		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found in key range [%s, %s)\n", startKey, endKey))
 		ctx.SetOutput(ovCount, 0)
 		return true, nil
 	}
@@ -246,7 +246,7 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 	}
 
 	ctx.SetOutput(ovCode, 200)
-	ctx.SetOutput(ovMessage, fmt.Sprintf("retrieved data in key range [%s, %s]: %s", startKey, endKey, string(jsonBytes)))
+	ctx.SetOutput(ovMessage, fmt.Sprintf("retrieved data in key range [%s, %s): %s", startKey, endKey, string(jsonBytes)))
 	if result, ok := ctx.GetOutput(ovResult).(*data.ComplexObject); ok && result != nil {
 		log.Debugf("set activity output result: %+v\n", value)
 		result.Value = value
