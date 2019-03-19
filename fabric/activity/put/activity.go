@@ -116,13 +116,16 @@ func storePrivateData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, 
 	log.Debugf("stored in private collection %s, data: %s\n", collection, string(jsonBytes))
 
 	// store composite keys if required
-	if compKeys, err := getCompositeKeys(ctx, ccshim, key, value); err == nil && compKeys != nil && len(compKeys) > 0 {
-		for _, k := range compKeys {
-			cv := []byte{0x00}
-			if err := ccshim.PutPrivateData(collection, k, cv); err != nil {
-				log.Errorf("failed to store composite key %s on collection %s: %+v\n", k, collection, err)
-			} else {
-				log.Debugf("stored composite key %s on collection %s\n", k, collection)
+	if compositeKeyDefs, _ := getCompositeKeyDefinition(ctx); compositeKeyDefs != nil {
+		compKeys := common.ExtractCompositeKeys(ccshim, compositeKeyDefs, key, value)
+		if compKeys != nil && len(compKeys) > 0 {
+			for _, k := range compKeys {
+				cv := []byte{0x00}
+				if err := ccshim.PutPrivateData(collection, k, cv); err != nil {
+					log.Errorf("failed to store composite key %s on collection %s: %+v\n", k, collection, err)
+				} else {
+					log.Debugf("stored composite key %s on collection %s\n", k, collection)
+				}
 			}
 		}
 	}
@@ -156,13 +159,16 @@ func storeData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, key str
 	log.Debugf("stored data on ledger: %s\n", string(jsonBytes))
 
 	// store composite keys if required
-	if compKeys, err := getCompositeKeys(ctx, ccshim, key, value); err == nil && compKeys != nil && len(compKeys) > 0 {
-		for _, k := range compKeys {
-			cv := []byte{0x00}
-			if err := ccshim.PutState(k, cv); err != nil {
-				log.Errorf("failed to store composite key %s: %+v\n", k, err)
-			} else {
-				log.Debugf("stored composite key %s\n", k)
+	if compositeKeyDefs, _ := getCompositeKeyDefinition(ctx); compositeKeyDefs != nil {
+		compKeys := common.ExtractCompositeKeys(ccshim, compositeKeyDefs, key, value)
+		if compKeys != nil && len(compKeys) > 0 {
+			for _, k := range compKeys {
+				cv := []byte{0x00}
+				if err := ccshim.PutState(k, cv); err != nil {
+					log.Errorf("failed to store composite key %s: %+v\n", k, err)
+				} else {
+					log.Debugf("stored composite key %s\n", k)
+				}
 			}
 		}
 	}
@@ -178,64 +184,17 @@ func storeData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, key str
 	return true, nil
 }
 
-// collect composite keys as specified in activity input 'ivCompositeKeys'
-func getCompositeKeys(ctx activity.Context, ccshim shim.ChaincodeStubInterface, key string, value interface{}) ([]string, error) {
-	// verify that value is a map
-	obj, ok := value.(map[string]interface{})
-	if !ok {
-		log.Debugf("No composite keys because state value is not a map\n")
-		return nil, nil
-	}
-
-	// check composite keys
-	if keyDefs, ok := ctx.GetInput(ivCompositeKeys).(string); ok && keyDefs != "" {
-		log.Debugf("Got composite key definitions: %s\n", keyDefs)
-		keyMap := make(map[string][]string)
-		if err := json.Unmarshal([]byte(keyDefs), &keyMap); err != nil {
+func getCompositeKeyDefinition(ctx activity.Context) (map[string][]string, error) {
+	if ckJSON, ok := ctx.GetInput(ivCompositeKeys).(string); ok && ckJSON != "" {
+		log.Debugf("Got composite key definition: %s\n", ckJSON)
+		ckDefs := make(map[string][]string)
+		if err := json.Unmarshal([]byte(ckJSON), &ckDefs); err != nil {
 			log.Warningf("failed to unmarshal composite key definitions: %+v\n", err)
 			return nil, err
 		}
-		log.Debugf("Parsed composite keys: %+v\n", keyMap)
-		var compKeys []string
-		for k, v := range keyMap {
-			if ck := compositeKey(ccshim, k, v, key, obj); ck != "" {
-				compKeys = append(compKeys, ck)
-			}
-		}
-		return compKeys, nil
+		log.Debugf("Parsed composite key definitions: %+v\n", ckDefs)
+		return ckDefs, nil
 	}
 	log.Debugf("No composite key is defined")
 	return nil, nil
-}
-
-// construct composite key if all specified attributes exist in the value object
-func compositeKey(ccshim shim.ChaincodeStubInterface, name string, attributes []string, key string, value map[string]interface{}) string {
-	if name == "" || attributes == nil || len(attributes) == 0 {
-		log.Debugf("invalid composite key definition: name %s attributes %+v\n", name, attributes)
-		return ""
-	}
-	var keyValues []string
-	for _, k := range attributes {
-		if v, ok := value[k]; ok {
-			keyValues = append(keyValues, fmt.Sprintf("%v", v))
-		} else {
-			log.Debugf("composite key attribute %s is not found in state value\n", k)
-			return ""
-		}
-	}
-	if keyValues == nil || len(keyValues) == 0 {
-		log.Debug("No composite key attribute is found in state value\n")
-		return ""
-	}
-
-	// the last element of composite key should be the key itself
-	if key != keyValues[len(keyValues)-1] {
-		keyValues = append(keyValues, key)
-	}
-	compKey, err := ccshim.CreateCompositeKey(name, keyValues)
-	if err != nil {
-		log.Errorf("failed to create composite key %s with values %+v\n", name, keyValues)
-		return ""
-	}
-	return compKey
 }

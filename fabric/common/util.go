@@ -3,6 +3,7 @@ package common
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"sort"
 
@@ -216,4 +217,60 @@ func ConstructQueryResponse(resultsIterator shim.StateQueryIteratorInterface, is
 	}
 	buffer.WriteString("]")
 	return buffer.Bytes(), nil
+}
+
+// ExtractCompositeKeys collects all valid composite-keys matching composite-key definitions using fields of a value object
+func ExtractCompositeKeys(stub shim.ChaincodeStubInterface, compositeKeyDefs map[string][]string, keyValue string, value interface{}) []string {
+	// verify that value is a map
+	obj, ok := value.(map[string]interface{})
+	if !ok {
+		log.Debugf("No composite keys because state value is not a map\n")
+		return nil
+	}
+
+	// check composite keys
+	if compositeKeyDefs != nil {
+		var compositeKeys []string
+		for keyName, attributes := range compositeKeyDefs {
+			if ck := makeCompositeKey(stub, keyName, attributes, keyValue, obj); ck != "" {
+				compositeKeys = append(compositeKeys, ck)
+			}
+		}
+		return compositeKeys
+	}
+	log.Debugf("No composite key is defined")
+	return nil
+}
+
+// constructs composite key if all specified attributes exist in the value object
+// returns "" if failed to extract any attribute from the value object
+func makeCompositeKey(stub shim.ChaincodeStubInterface, keyName string, attributes []string, keyValue string, value map[string]interface{}) string {
+	if keyName == "" || attributes == nil || len(attributes) == 0 {
+		log.Debugf("invalid composite key definition: name %s attributes %+v\n", keyName, attributes)
+		return ""
+	}
+	var attrValues []string
+	for _, k := range attributes {
+		if v, ok := value[k]; ok {
+			attrValues = append(attrValues, fmt.Sprintf("%v", v))
+		} else {
+			log.Debugf("composite key attribute %s is not found in state value\n", k)
+			return ""
+		}
+	}
+	if attrValues == nil || len(attrValues) == 0 {
+		log.Debug("No composite key attribute found in state value\n")
+		return ""
+	}
+
+	// the last element of composite key must be the keyValue itself
+	if keyValue != attrValues[len(attrValues)-1] {
+		attrValues = append(attrValues, keyValue)
+	}
+	compositeKey, err := stub.CreateCompositeKey(keyName, attrValues)
+	if err != nil {
+		log.Errorf("failed to create composite key %s with values %+v\n", keyName, attrValues)
+		return ""
+	}
+	return compositeKey
 }

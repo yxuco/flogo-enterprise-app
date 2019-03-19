@@ -71,6 +71,10 @@
             "type": "integer"
         },
         {
+            "name": "errors",
+            "type": "integer"
+        },
+        {
             "name": "result",
             "type": "complex_object"
         }
