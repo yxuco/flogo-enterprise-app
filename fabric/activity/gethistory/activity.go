@@ -127,7 +127,7 @@ func constructHistoryResponse(resultsIterator shim.HistoryQueryIteratorInterface
 			buffer.WriteString(",")
 		}
 
-		buffer.WriteString("{\"" + dTxID + ":")
+		buffer.WriteString("{\"" + dTxID + "\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(response.TxId)
 		buffer.WriteString("\"")
@@ -147,9 +147,9 @@ func constructHistoryResponse(resultsIterator shim.HistoryQueryIteratorInterface
 		buffer.WriteString("\"")
 
 		buffer.WriteString(", \"" + dIsDeleted + "\":")
-		buffer.WriteString("\"")
+		//		buffer.WriteString("\"")
 		buffer.WriteString(strconv.FormatBool(response.IsDelete))
-		buffer.WriteString("\"")
+		//		buffer.WriteString("\"")
 
 		buffer.WriteString("}")
 		isEmpty = false
