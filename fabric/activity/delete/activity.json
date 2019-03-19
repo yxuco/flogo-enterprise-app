@@ -40,6 +40,16 @@
             }
         },
         {
+            "name": "keysOnly",
+            "type": "boolean",
+            "required": true,
+            "display": {
+                "name": "Delete composite keys only",
+                "description": "Delete specified composite keys only, not the record."
+            },
+            "value": false
+        },
+        {
             "name": "compositeKeys",
             "type": "string",
             "display": {

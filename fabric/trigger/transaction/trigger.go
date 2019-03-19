@@ -177,7 +177,7 @@ func (t *Trigger) Invoke(stub shim.ChaincodeStubInterface, fn string, args []str
 		triggerData[common.FabricStub] = stub
 		triggerData[oTxID] = stub.GetTxID()
 		if ts, err := stub.GetTxTimestamp(); err == nil {
-			triggerData[oTxTime] = time.Unix(ts.Seconds, int64(ts.Nanos)).UTC().Format("2006-01-02T15:04:05.000000-0700")
+			triggerData[oTxTime] = time.Unix(ts.Seconds, int64(ts.Nanos)).UTC().Format(time.RFC3339Nano)
 		}
 
 		// execute flogo flow

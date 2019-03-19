@@ -91,8 +91,8 @@ func (a *FabricPutAllActivity) Eval(ctx activity.Context) (done bool, err error)
 
 		for _, v := range valueArray {
 			vmap := v.(map[string]interface{})
-			vkey := vmap["key"].(string)
-			if err := storePrivateData(stub, collection, compositeKeyDefs, vkey, vmap["value"]); err != nil {
+			vkey := vmap[common.KeyField].(string)
+			if err := storePrivateData(stub, collection, compositeKeyDefs, vkey, vmap[common.ValueField]); err != nil {
 				errorCount++
 				errorKeys = append(errorKeys, vkey)
 			} else {
@@ -104,8 +104,8 @@ func (a *FabricPutAllActivity) Eval(ctx activity.Context) (done bool, err error)
 		// store data on the ledger
 		for _, v := range valueArray {
 			vmap := v.(map[string]interface{})
-			vkey := vmap["key"].(string)
-			if err := storeData(stub, compositeKeyDefs, vkey, vmap["value"]); err != nil {
+			vkey := vmap[common.KeyField].(string)
+			if err := storeData(stub, compositeKeyDefs, vkey, vmap[common.ValueField]); err != nil {
 				errorCount++
 				errorKeys = append(errorKeys, vkey)
 			} else {

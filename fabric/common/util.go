@@ -18,6 +18,10 @@ import (
 var log = shim.NewLogger("fabric-common")
 
 const (
+	// KeyField attribute used in query response of key-value pairs
+	KeyField = "key"
+	// ValueField attribute used in query response of key-value pairs
+	ValueField = "value"
 	// FabricStub is the name of flow property for passing chaincode stub to activities
 	FabricStub = "_chaincode_stub"
 )
@@ -201,12 +205,12 @@ func ConstructQueryResponse(resultsIterator shim.StateQueryIteratorInterface, is
 		if !isEmpty {
 			buffer.WriteString(",")
 		}
-		buffer.WriteString("{\"key\":")
+		buffer.WriteString("{\""+KeyField+"\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(key)
 		buffer.WriteString("\"")
 
-		buffer.WriteString(", \"value\":")
+		buffer.WriteString(", \""+ValueField+"\":")
 		// Record is a JSON object, so we write as-is
 		buffer.WriteString(string(value))
 		buffer.WriteString("}")
