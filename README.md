@@ -3,4 +3,4 @@ This package is a [TIBCO Flogo® Enterprise](https://docs.tibco.com/products/tib
 
 It provides Flogo® triggers, activities and connectors to enable Flogo® as a visual programming environment for blockchain apps on Hyperledger Fabric.
 
-The sample [`fabric-contract`](https://github.com/yxuco/flogo-enterprise-app/tree/master/fabric-contract) illustrates how this extension can simplify the blockchain app development by using the visual programming environment of the TIBCO Flogo® Enterprise.
+The sample [`marble-app`](https://github.com/yxuco/flogo-enterprise-app/tree/master/marble-app) illustrates how this extension can simplify the blockchain app development by using the visual programming environment of the TIBCO Flogo® Enterprise.
