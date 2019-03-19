@@ -189,7 +189,7 @@ func retrievePrivateDataByCompositeKey(ctx activity.Context, ccshim shim.Chainco
 		result.Value = value
 		ctx.SetOutput(ovResult, result)
 		ctx.SetOutput(ovBookmark, "")
-		if vArray, ok := value.([]map[string]interface{}); ok {
+		if vArray, ok := value.([]interface{}); ok {
 			ctx.SetOutput(ovCount, len(vArray))
 		} else {
 			ctx.SetOutput(ovCount, 0)
@@ -270,7 +270,7 @@ func retrieveByCompositeKey(ctx activity.Context, ccshim shim.ChaincodeStubInter
 			ctx.SetOutput(ovBookmark, resultMetadata.Bookmark)
 		} else {
 			ctx.SetOutput(ovBookmark, "")
-			if vArray, ok := value.([]map[string]interface{}); ok {
+			if vArray, ok := value.([]interface{}); ok {
 				log.Debugf("set value array lenth: \n", len(vArray))
 				ctx.SetOutput(ovCount, len(vArray))
 			} else {

@@ -56,14 +56,14 @@ func (a *FabricPutAllActivity) Eval(ctx activity.Context) (done bool, err error)
 		ctx.SetOutput(ovMessage, "input data is not a complex object")
 		return false, errors.New("input data is not a complex object")
 	}
-	values, ok := obj.Value.([]map[string]interface{})
+	valueArray, ok := obj.Value.([]interface{})
 	if !ok {
 		log.Errorf("input value %T is not an array of objects\n", obj.Value)
 		ctx.SetOutput(ovCode, 400)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("input value %T is not an array of objects", obj.Value))
 		return false, errors.Errorf("input value %T is not an array of objects", obj.Value)
 	}
-	log.Debugf("input value type %T: %+v\n", values, values)
+	log.Debugf("input value type %T: %+v\n", valueArray, valueArray)
 
 	// get composite key definitions
 	compositeKeyDefs, _ := getCompositeKeyDefinition(ctx)
@@ -89,7 +89,8 @@ func (a *FabricPutAllActivity) Eval(ctx activity.Context) (done bool, err error)
 			return false, errors.New("private collection is not specified")
 		}
 
-		for _, vmap := range values {
+		for _, v := range valueArray {
+			vmap := v.(map[string]interface{})
 			vkey := vmap["key"].(string)
 			if err := storePrivateData(stub, collection, compositeKeyDefs, vkey, vmap["value"]); err != nil {
 				errorCount++
@@ -101,7 +102,8 @@ func (a *FabricPutAllActivity) Eval(ctx activity.Context) (done bool, err error)
 		}
 	} else {
 		// store data on the ledger
-		for _, vmap := range values {
+		for _, v := range valueArray {
+			vmap := v.(map[string]interface{})
 			vkey := vmap["key"].(string)
 			if err := storeData(stub, compositeKeyDefs, vkey, vmap["value"]); err != nil {
 				errorCount++

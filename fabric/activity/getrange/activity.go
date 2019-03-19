@@ -153,7 +153,7 @@ func retrievePrivateRange(ctx activity.Context, ccshim shim.ChaincodeStubInterfa
 		result.Value = value
 		ctx.SetOutput(ovResult, result)
 		ctx.SetOutput(ovBookmark, "")
-		if vArray, ok := value.([]map[string]interface{}); ok {
+		if vArray, ok := value.([]interface{}); ok {
 			ctx.SetOutput(ovCount, len(vArray))
 		} else {
 			ctx.SetOutput(ovCount, 0)
@@ -233,7 +233,7 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 			ctx.SetOutput(ovBookmark, resultMetadata.Bookmark)
 		} else {
 			ctx.SetOutput(ovBookmark, "")
-			if vArray, ok := value.([]map[string]interface{}); ok {
+			if vArray, ok := value.([]interface{}); ok {
 				ctx.SetOutput(ovCount, len(vArray))
 			} else {
 				ctx.SetOutput(ovCount, 0)
