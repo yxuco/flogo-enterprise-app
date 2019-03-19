@@ -265,13 +265,16 @@ func retrieveByCompositeKey(ctx activity.Context, ccshim shim.ChaincodeStubInter
 		result.Value = value
 		ctx.SetOutput(ovResult, result)
 		if resultMetadata != nil {
+			log.Debugf("set pagination metadata: count=%d, bookmark=%s\n", resultMetadata.FetchedRecordsCount, resultMetadata.Bookmark)
 			ctx.SetOutput(ovCount, resultMetadata.FetchedRecordsCount)
 			ctx.SetOutput(ovBookmark, resultMetadata.Bookmark)
 		} else {
 			ctx.SetOutput(ovBookmark, "")
 			if vArray, ok := value.([]map[string]interface{}); ok {
+				log.Debugf("set value array lenth: \n", len(vArray))
 				ctx.SetOutput(ovCount, len(vArray))
 			} else {
+				log.Debug("result value is not array. set count=0\n")
 				ctx.SetOutput(ovCount, 0)
 			}
 		}
