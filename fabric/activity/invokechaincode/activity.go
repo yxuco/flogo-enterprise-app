@@ -28,7 +28,7 @@ func init() {
 	common.SetChaincodeLogLevel(log)
 }
 
-// FabricChaincodeActivity is a stub for executing Hyperledger Fabric put operations
+// FabricChaincodeActivity is a stub for executing Hyperledger Fabric invoke-chaincode operations
 type FabricChaincodeActivity struct {
 	metadata *activity.Metadata
 }

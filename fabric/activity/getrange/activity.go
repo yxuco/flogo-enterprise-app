@@ -33,7 +33,7 @@ func init() {
 	common.SetChaincodeLogLevel(log)
 }
 
-// FabricRangeActivity is a stub for executing Hyperledger Fabric getRange operations
+// FabricRangeActivity is a stub for executing Hyperledger Fabric get-by-range operations
 type FabricRangeActivity struct {
 	metadata *activity.Metadata
 }
@@ -123,7 +123,7 @@ func retrievePrivateRange(ctx activity.Context, ccshim shim.ChaincodeStubInterfa
 
 	jsonBytes, err := common.ConstructQueryResponse(resultIterator, false, nil)
 	if err != nil {
-		log.Errorf("failed to collect result from iteragor: %+v\n", err)
+		log.Errorf("failed to collect result from iterator: %+v\n", err)
 		ctx.SetOutput(ovCode, 500)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to collect result from iterator: %+v", err))
 		return false, errors.Wrapf(err, "failed to collect result from iterator")
@@ -199,7 +199,7 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 
 	jsonBytes, err := common.ConstructQueryResponse(resultIterator, false, nil)
 	if err != nil {
-		log.Errorf("failed to collect result from iteragor: %+v\n", err)
+		log.Errorf("failed to collect result from iterator: %+v\n", err)
 		ctx.SetOutput(ovCode, 500)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to collect result from iterator: %+v", err))
 		return false, errors.Wrapf(err, "failed to collect result from iterator")

@@ -33,7 +33,7 @@ func init() {
 	common.SetChaincodeLogLevel(log)
 }
 
-// FabricHistoryActivity is a stub for executing Hyperledger Fabric put operations
+// FabricHistoryActivity is a stub for executing Hyperledger Fabric get-history operations
 type FabricHistoryActivity struct {
 	metadata *activity.Metadata
 }

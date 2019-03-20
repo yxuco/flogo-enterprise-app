@@ -27,7 +27,7 @@ func init() {
 	common.SetChaincodeLogLevel(log)
 }
 
-// FabricEventActivity is a stub for executing Hyperledger Fabric put operations
+// FabricEventActivity is a stub for executing Hyperledger Fabric set-event operations
 type FabricEventActivity struct {
 	metadata *activity.Metadata
 }
@@ -53,23 +53,16 @@ func (a *FabricEventActivity) Eval(ctx activity.Context) (done bool, err error) 
 		return false, errors.New("event name is not specified")
 	}
 	log.Debugf("event name: %s\n", name)
-	payloadObj, ok := ctx.GetInput(ivPayload).(*data.ComplexObject)
-	if !ok {
-		log.Errorf("payload is not a complex object\n")
-		ctx.SetOutput(ovCode, 400)
-		ctx.SetOutput(ovMessage, "payload is not a complex object")
-		return false, errors.New("payload is not a complex object")
-	}
-	payload := payloadObj.Value
-	log.Debugf("payload type %T: %+v\n", payload, payload)
 
-	jsonBytes, err := json.Marshal(payload)
-	if err != nil {
-		log.Errorf("failed to marshal payload '%+v', error: %+v\n", payload, err)
-		ctx.SetOutput(ovCode, 400)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to marshal payload: %+v", err))
-		return false, errors.Wrapf(err, "failed to marshal payload: %+v", payload)
+	var jsonBytes []byte
+	payload := getEventPayload(ctx)
+	if payload != nil {
+		jsonBytes, err = json.Marshal(payload)
+		if err != nil {
+			log.Warningf("failed to marshal payload '%+v', error: %+v\n", payload, err)
+		}
 	}
+	log.Debugf("event payload: %+v\n", jsonBytes)
 
 	// get chaincode stub
 	stub, err := common.GetChaincodeStub(ctx)
@@ -96,4 +89,13 @@ func (a *FabricEventActivity) Eval(ctx activity.Context) (done bool, err error) 
 		ctx.SetOutput(ovResult, result)
 	}
 	return true, nil
+}
+
+func getEventPayload(ctx activity.Context) interface{} {
+	payload, ok := ctx.GetInput(ivPayload).(*data.ComplexObject)
+	if !ok {
+		log.Debug("payload is not a complex object\n")
+		return nil
+	}
+	return payload.Value
 }

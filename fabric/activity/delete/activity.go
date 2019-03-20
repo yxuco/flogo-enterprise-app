@@ -30,7 +30,7 @@ func init() {
 	common.SetChaincodeLogLevel(log)
 }
 
-// FabricDeleteActivity is a stub for executing Hyperledger Fabric put operations
+// FabricDeleteActivity is a stub for executing Hyperledger Fabric delete operations
 type FabricDeleteActivity struct {
 	metadata *activity.Metadata
 }

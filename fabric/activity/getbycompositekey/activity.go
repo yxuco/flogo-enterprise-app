@@ -33,7 +33,7 @@ func init() {
 	common.SetChaincodeLogLevel(log)
 }
 
-// FabricCompositeActivity is a stub for executing Hyperledger Fabric getRange operations
+// FabricCompositeActivity is a stub for executing Hyperledger Fabric get-by-composite-key operations
 type FabricCompositeActivity struct {
 	metadata *activity.Metadata
 }
@@ -159,7 +159,7 @@ func retrievePrivateDataByCompositeKey(ctx activity.Context, ccshim shim.Chainco
 
 	jsonBytes, err := common.ConstructQueryResponse(resultIterator, true, ccshim)
 	if err != nil {
-		log.Errorf("failed to collect result from iteragor: %+v\n", err)
+		log.Errorf("failed to collect result from iterator: %+v\n", err)
 		ctx.SetOutput(ovCode, 500)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to collect result from iterator: %+v", err))
 		return false, errors.Wrapf(err, "failed to collect result from iterator")

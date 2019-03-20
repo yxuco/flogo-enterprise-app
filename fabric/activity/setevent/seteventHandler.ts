@@ -43,8 +43,6 @@ export class seteventHandler extends WiServiceHandlerContribution {
                 } catch (e) {
                     vresult.setError("FABTIC-SETEVENT-1010", "Invalid JSON in payload: " + e.toString());
                 }
-            } else {
-                vresult.setError("FABTIC-SETEVENT-1000", "Payload definition must not be empty");
             }
             return vresult;
         }
