@@ -67,7 +67,7 @@ func (a *FabricPutActivity) Eval(ctx activity.Context) (done bool, err error) {
 			value = obj.Value
 		} else {
 			log.Errorf("input data is not a complex object\n")
-			ctx.SetOutput(ovCode, 500)
+			ctx.SetOutput(ovCode, 400)
 			ctx.SetOutput(ovMessage, "input data is not a complex object")
 			return false, errors.New("input data is not a complex object")
 		}
