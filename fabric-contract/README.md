@@ -16,7 +16,7 @@ This is a sample smart contract for [Hyperledger Fabric](https://www.hyperledger
 ## Build and deploy chaincode to Hyperledger Fabric
 - Export the Flogo App, and copy the downloaded model file, i.e., [`fabric-contract.json`](https://github.com/yxuco/flogo-enterprise-app/blob/master/fabric-contract/fabric-contract.json) to folder `fabric-contract`.  You can skip this step if you did not modify the app in Flogo® Enterprise.
 - In the `fabric-contract` folder, execute `make create` to generate source code for the chaincode.  This step downloads all dependent packages, and thus may take a while depending on the network speed.
-- Execute `make deploy` to deploy the chaincode to the `fabric-samples` chaincode folder.  Note: you may need edit the [`Makefile`](https://github.com/yxuco/flogo-enterprise-app/blob/master/fabric-contract/Makefile) to set `CC_DEPLOY` if `fabric-samples` are not downloaded to the default location under `$GOPATH`.
+- Execute `make deploy` to deploy the chaincode to the `fabric-samples` chaincode folder.  Note: you may need to edit the [`Makefile`](https://github.com/yxuco/flogo-enterprise-app/blob/master/fabric-contract/Makefile) and set `CC_DEPLOY` to match the installation folder of `fabric-samples` if it is not downloaded to the default location under `$GOPATH`.
 
 ## Test smart contract
 Start Hyperledger Fabric test network in dev mode:

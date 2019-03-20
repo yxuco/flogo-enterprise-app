@@ -3,6 +3,7 @@ package query
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
@@ -59,7 +60,7 @@ func (a *FabricQueryActivity) Eval(ctx activity.Context) (done bool, err error) 
 		return false, errors.New("query statement is not specified")
 	}
 	log.Debugf("query statement: %s\n", query)
-	queryParams, err := getQueryParams(ctx)
+	queryParams, paramTypes, err := getQueryParams(ctx)
 	if err != nil {
 		ctx.SetOutput(ovCode, 400)
 		ctx.SetOutput(ovMessage, err.Error())
@@ -67,7 +68,7 @@ func (a *FabricQueryActivity) Eval(ctx activity.Context) (done bool, err error) 
 	}
 	log.Debugf("query parameters: %+v\n", queryParams)
 
-	queryStatement, err := prepareQueryStatement(query, queryParams)
+	queryStatement, err := prepareQueryStatement(query, queryParams, paramTypes)
 	if err != nil {
 		ctx.SetOutput(ovCode, 400)
 		ctx.SetOutput(ovMessage, err.Error())
@@ -91,23 +92,97 @@ func (a *FabricQueryActivity) Eval(ctx activity.Context) (done bool, err error) 
 	return queryData(ctx, stub, queryStatement)
 }
 
-func getQueryParams(ctx activity.Context) (map[string]interface{}, error) {
+func getQueryParams(ctx activity.Context) (params map[string]interface{}, paramTypes map[string]string, err error) {
 	queryParams, ok := ctx.GetInput(ivQueryParams).(*data.ComplexObject)
-	if !ok || queryParams == nil || queryParams.Value == nil {
-		log.Error("query parameters are not specified\n")
-		return nil, errors.New("query parameters are not specified")
+	if !ok || queryParams == nil || queryParams.Value == nil || queryParams.Metadata == "" {
+		log.Debug("no query parameter is specified\n")
+		return nil, nil, nil
 	}
-	params, ok := queryParams.Value.(map[string]interface{})
+
+	// extract parameter definitions from metadata
+	paramTypes, err = getQueryParamTypes(queryParams.Metadata)
+	if err != nil {
+		log.Errorf("failed to parse parameter metadata %+v\n", err)
+		return nil, nil, err
+	}
+	if paramTypes == nil || len(paramTypes) == 0 {
+		log.Debugf("no parameters defined in metadata\n")
+		return nil, nil, nil
+	}
+
+	// verify parameter values
+	params, ok = queryParams.Value.(map[string]interface{})
 	if !ok {
 		log.Errorf("query parameter type %T is not JSON object\n", queryParams.Value)
-		return nil, errors.Errorf("query parameter type %T is not JSON object\n", queryParams.Value)
+		return nil, nil, errors.Errorf("query parameter type %T is not JSON object\n", queryParams.Value)
+	}
+	return params, paramTypes, nil
+}
+
+func getQueryParamTypes(metadata string) (map[string]string, error) {
+	// extract object field name and type from JSON schema
+	var objectProps struct {
+		Props map[string]struct {
+			FieldType string `json:"type"`
+		} `json:"properties"`
+	}
+	if err := json.Unmarshal([]byte(metadata), &objectProps); err != nil {
+		log.Errorf("failed to extract properties from metadata: %+v", err)
+		return nil, err
+	}
+	if objectProps.Props == nil {
+		log.Debug("no parameter specified in metadata %s\n", metadata)
+		return nil, nil
+	}
+
+	// collect property name and types
+	params := make(map[string]string)
+	for k, v := range objectProps.Props {
+		log.Debugf("query parameter %s type %s\n", k, v.FieldType)
+		params[k] = v.FieldType
 	}
 	return params, nil
 }
 
-func prepareQueryStatement(query string, queryParams map[string]interface{}) (string, error) {
-	// TODO: construct query statement by replace parameters in query
-	return query, nil
+func prepareQueryStatement(query string, queryParams map[string]interface{}, paramTypes map[string]string) (string, error) {
+	if paramTypes == nil {
+		log.Debug("no parameter is defined for query\n")
+		return query, nil
+	}
+
+	// collect replacer args
+	var args []string
+	for pname, ptype := range paramTypes {
+		value, ok := queryParams[pname]
+		if !ok {
+			// set default values
+			switch ptype {
+			case "number":
+				value = 0
+			case "boolean":
+				value = false
+			default:
+				value = ""
+			}
+		}
+
+		// collect string replacer args
+		param := fmt.Sprintf("%v", value)
+		if ptype == "string" {
+			if jsonBytes, err := json.Marshal(value); err != nil {
+				log.Debugf("failed to marshal value %v: %+v\n", value, err)
+				param = "null"
+			} else {
+				param = string(jsonBytes)
+			}
+		}
+		args = append(args, fmt.Sprintf(`"$%s"`, pname), param)
+	}
+	log.Debugf("query replacer args %v\n", args)
+
+	// replace query parameters with values
+	r := strings.NewReplacer(args...)
+	return r.Replace(query), nil
 }
 
 func queryPrivateData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, query string) (bool, error) {
