@@ -10,11 +10,11 @@ This is a sample smart contract for [Hyperledger Fabric](https://www.hyperledger
 ## Edit smart contract
 - Start TIBCO Flogo® Enterprise as described in [User's Guide](https://docs.tibco.com/pub/flogo/2.4.0/doc/pdf/TIB_flogo_2.4_users_guide.pdf?id=1)
 - Upload [`fabticExtension.zip`](https://github.com/yxuco/flogo-enterprise-app/blob/master/fabricExtension.zip) to TIBCO Flogo® Enterprise [Extensions](http://localhost:8090/wistudio/extensions).  Note that you can recreate this `zip` by using the script [`zip-fabric.sh`](https://github.com/yxuco/flogo-enterprise-app/blob/master/zip-fabric.sh)
-- Create new Flogo App of name `fabric-contract` and choose `Import app` to import the model [`fabric-contract.json`](https://github.com/yxuco/flogo-enterprise-app/blob/master/fabric-contract/fabric-contract.json)
+- Create new Flogo App of name `fabric_contract` and choose `Import app` to import the model [`fabric_contract.json`](https://github.com/yxuco/flogo-enterprise-app/blob/master/fabric-contract/fabric_contract.json)
 - You can then add or update contract transactions using the graphical modeler of the TIBCO Flogo® Enterprise.
 
 ## Build and deploy chaincode to Hyperledger Fabric
-- Export the Flogo App, and copy the downloaded model file, i.e., [`fabric-contract.json`](https://github.com/yxuco/flogo-enterprise-app/blob/master/fabric-contract/fabric-contract.json) to folder `fabric-contract`.  You can skip this step if you did not modify the app in Flogo® Enterprise.
+- Export the Flogo App, and copy the downloaded model file, i.e., [`fabric_contract.json`](https://github.com/yxuco/flogo-enterprise-app/blob/master/fabric-contract/fabric_contract.json) to folder `fabric-contract`.  You can skip this step if you did not modify the app in Flogo® Enterprise.
 - In the `fabric-contract` folder, execute `make create` to generate source code for the chaincode.  This step downloads all dependent packages, and thus may take a while depending on the network speed.
 - Execute `make deploy` to deploy the chaincode to the `fabric-samples` chaincode folder.  Note: you may need to edit the [`Makefile`](https://github.com/yxuco/flogo-enterprise-app/blob/master/fabric-contract/Makefile) and set `CC_DEPLOY` to match the installation folder of `fabric-samples` if it is not downloaded to the default location under `$GOPATH`.
 

@@ -1,6 +1,6 @@
 MAKEFILE_THIS := $(lastword $(MAKEFILE_LIST))
 SRC_PATH      := $(patsubst %/,%,$(dir $(abspath $(MAKEFILE_THIS))))
-APP_FILE      := fabric-contract.json
+APP_FILE      := fabric_contract.json
 APP_NAME      := flogo_cc
 LOG_LEVEL     := INFO
 CC_DEPLOY     := $(GOPATH)/src/github.com/hyperledger/fabric-samples/chaincode
