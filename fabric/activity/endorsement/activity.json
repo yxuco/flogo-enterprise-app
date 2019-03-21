@@ -26,7 +26,8 @@
             "allowed": [
                 "ADD",
                 "DELETE",
-                "LIST"
+                "LIST",
+                "SET"
             ],
             "value": "LIST",
             "display": {
@@ -60,8 +61,17 @@
                 "name": "Endorsing organizations",
                 "description": "Comma-delimited list of MSPIDs to add to or delete from endorsement policy",
                 "visible": false,
-                "appPropertySupport": true,
-                "mappable": true
+                "appPropertySupport": true
+            }
+        },
+        {
+            "name": "policy",
+            "type": "string",
+            "display": {
+                "name": "Endorsement policy",
+                "description": "New endorsement policy, e.g., OutOf(1, 'Org1.member', 'Org2.member', 'Org3.member')",
+                "visible": false,
+                "appPropertySupport": true
             }
         },
         {

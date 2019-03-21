@@ -42,12 +42,24 @@ export class endorsementHandler extends WiServiceHandlerContribution {
             let vresult: IValidationResult = ValidationResult.newValidationResult();
             let operationField: IFieldDefinition = context.getField("operation");
             let organizationsField: IFieldDefinition = context.getField("organizations");
-            if (operationField.value && operationField.value === "LIST") {
-                vresult.setVisible(false);
-            } else {
+            if (operationField.value && (operationField.value === "ADD" || operationField.value === "DELETE")) {
                 if (organizationsField.display && organizationsField.display.visible == false) {
                     vresult.setVisible(true);
                 }
+            } else {
+                vresult.setVisible(false);
+            }
+            return vresult;
+        } else if (fieldName === "policy") {
+            let vresult: IValidationResult = ValidationResult.newValidationResult();
+            let operationField: IFieldDefinition = context.getField("operation");
+            let policyField: IFieldDefinition = context.getField("policy");
+            if (operationField.value && operationField.value === "SET") {
+                if (policyField.display && policyField.display.visible == false) {
+                    vresult.setVisible(true);
+                }
+            } else {
+                vresult.setVisible(false);
             }
             return vresult;
         } else if (fieldName === "collection") {
