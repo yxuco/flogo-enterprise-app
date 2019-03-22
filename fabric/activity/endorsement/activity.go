@@ -110,20 +110,22 @@ func setPrivatePolicy(ctx activity.Context, ccshim shim.ChaincodeStubInterface, 
 		return false, errors.Wrapf(err, "failed to create policy")
 	}
 
-	epBytes, err := stateEP.Policy()
-	if err != nil {
-		log.Errorf("failed to marshal policy: %+v\n", err)
-		ctx.SetOutput(ovCode, 500)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to marshal policy: %+v", err))
-		return false, errors.Wrapf(err, "failed to marshal policy")
-	}
+	if operation != "LIST" {
+		epBytes, err := stateEP.Policy()
+		if err != nil {
+			log.Errorf("failed to marshal policy: %+v\n", err)
+			ctx.SetOutput(ovCode, 500)
+			ctx.SetOutput(ovMessage, fmt.Sprintf("failed to marshal policy: %+v", err))
+			return false, errors.Wrapf(err, "failed to marshal policy")
+		}
 
-	// update endorsement policy for key
-	if err := ccshim.SetPrivateDataValidationParameter(collection, key, epBytes); err != nil {
-		log.Errorf("failed to set policy on private collecton %s: %+v\n", collection, err)
-		ctx.SetOutput(ovCode, 500)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to set policy on private collecton %s: %+v", collection, err))
-		return false, errors.Wrapf(err, "failed to to set policy on private collecton %s", collection)
+		// update endorsement policy for key
+		if err := ccshim.SetPrivateDataValidationParameter(collection, key, epBytes); err != nil {
+			log.Errorf("failed to set policy on private collecton %s: %+v\n", collection, err)
+			ctx.SetOutput(ovCode, 500)
+			ctx.SetOutput(ovMessage, fmt.Sprintf("failed to set policy on private collecton %s: %+v", collection, err))
+			return false, errors.Wrapf(err, "failed to to set policy on private collecton %s", collection)
+		}
 	}
 
 	ctx.SetOutput(ovCode, 200)
@@ -235,20 +237,22 @@ func setPolicy(ctx activity.Context, ccshim shim.ChaincodeStubInterface, key, op
 		return false, errors.Wrapf(err, "failed to create policy")
 	}
 
-	epBytes, err := stateEP.Policy()
-	if err != nil {
-		log.Errorf("failed to marshal policy: %+v\n", err)
-		ctx.SetOutput(ovCode, 500)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to marshal policy: %+v", err))
-		return false, errors.Wrapf(err, "failed to marshal policy")
-	}
+	if operation != "LIST" {
+		epBytes, err := stateEP.Policy()
+		if err != nil {
+			log.Errorf("failed to marshal policy: %+v\n", err)
+			ctx.SetOutput(ovCode, 500)
+			ctx.SetOutput(ovMessage, fmt.Sprintf("failed to marshal policy: %+v", err))
+			return false, errors.Wrapf(err, "failed to marshal policy")
+		}
 
-	// update endorsement policy for key
-	if err := ccshim.SetStateValidationParameter(key, epBytes); err != nil {
-		log.Errorf("failed to set policy for key %s: %+v\n", key, err)
-		ctx.SetOutput(ovCode, 500)
-		ctx.SetOutput(ovMessage, fmt.Sprintf("failed to set policy for key %s: %+v", key, err))
-		return false, errors.Wrapf(err, "failed to to set policy for key %s", key)
+		// update endorsement policy for key
+		if err := ccshim.SetStateValidationParameter(key, epBytes); err != nil {
+			log.Errorf("failed to set policy for key %s: %+v\n", key, err)
+			ctx.SetOutput(ovCode, 500)
+			ctx.SetOutput(ovMessage, fmt.Sprintf("failed to set policy for key %s: %+v", key, err))
+			return false, errors.Wrapf(err, "failed to to set policy for key %s", key)
+		}
 	}
 
 	ctx.SetOutput(ovCode, 200)
