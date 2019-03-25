@@ -43,7 +43,7 @@
                 "name": "Use pagination",
                 "description": "Specify result page size and bookmark"
             },
-            "value": false
+            "value": true
         },
         {
             "name": "pageSize",
