@@ -72,10 +72,8 @@ export class queryHandler extends WiServiceHandlerContribution {
             let vresult: IValidationResult = ValidationResult.newValidationResult();
             let paginationField: IFieldDefinition = context.getField("usePagination");
             let valueField: IFieldDefinition = context.getField(fieldName);
-            if (paginationField.value && paginationField.value === true) {
-                if (valueField.display && valueField.display.visible == false) {
-                    vresult.setVisible(true);
-                }
+            if (paginationField.value === true) {
+                vresult.setVisible(true);
             } else {
                 vresult.setVisible(false);
             }
