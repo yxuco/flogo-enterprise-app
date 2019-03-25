@@ -68,11 +68,11 @@ export class queryHandler extends WiServiceHandlerContribution {
                 }
             }
             return vresult;
-        } else if (fieldName === "start" || fieldName === "bookmark") {
+        } else if (fieldName === "pageSize" || fieldName === "start" || fieldName === "bookmark") {
             let vresult: IValidationResult = ValidationResult.newValidationResult();
-            let pageSizeField: IFieldDefinition = context.getField("pageSize");
+            let paginationField: IFieldDefinition = context.getField("usePagination");
             let valueField: IFieldDefinition = context.getField(fieldName);
-            if (pageSizeField.value && pageSizeField.value > 0) {
+            if (paginationField.value && paginationField.value === true) {
                 if (valueField.display && valueField.display.visible == false) {
                     vresult.setVisible(true);
                 }
