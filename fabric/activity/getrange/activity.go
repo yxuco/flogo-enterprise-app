@@ -13,17 +13,18 @@ import (
 )
 
 const (
-	ivStartKey   = "startKey"
-	ivEndKey     = "endKey"
-	ivPageSize   = "pageSize"
-	ivBookmark   = "start"
-	ivIsPrivate  = "isPrivate"
-	ivCollection = "collection"
-	ovCode       = "code"
-	ovMessage    = "message"
-	ovBookmark   = "bookmark"
-	ovCount      = "count"
-	ovResult     = "result"
+	ivStartKey      = "startKey"
+	ivEndKey        = "endKey"
+	ivUsePagination = "usePagination"
+	ivPageSize      = "pageSize"
+	ivBookmark      = "start"
+	ivIsPrivate     = "isPrivate"
+	ivCollection    = "collection"
+	ovCode          = "code"
+	ovMessage       = "message"
+	ovBookmark      = "bookmark"
+	ovCount         = "count"
+	ovResult        = "result"
 )
 
 // Create a new logger
@@ -89,13 +90,15 @@ func retrievePrivateRange(ctx activity.Context, ccshim shim.ChaincodeStubInterfa
 	// check pagination
 	pageSize := int32(0)
 	bookmark := ""
-	if psize, ok := ctx.GetInput(ivPageSize).(int); ok {
-		pageSize = int32(psize)
-		log.Debugf("pageSize=%d\n", pageSize)
-	}
-	if pageSize > 0 {
-		if bookmark, ok := ctx.GetInput(ivBookmark).(string); ok && bookmark != "" {
-			log.Debugf("bookmark=%s\n", bookmark)
+	if usePagination, ok := ctx.GetInput(ivUsePagination).(bool); ok && usePagination {
+		if psize, ok := ctx.GetInput(ivPageSize).(int); ok {
+			pageSize = int32(psize)
+			log.Debugf("pageSize=%d\n", pageSize)
+		}
+		if pageSize > 0 {
+			if bookmark, ok := ctx.GetInput(ivBookmark).(string); ok && bookmark != "" {
+				log.Debugf("bookmark=%s\n", bookmark)
+			}
 		}
 	}
 
@@ -166,13 +169,15 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 	// check pagination
 	pageSize := int32(0)
 	bookmark := ""
-	if psize, ok := ctx.GetInput(ivPageSize).(int); ok {
-		pageSize = int32(psize)
-		log.Debugf("pageSize=%d\n", pageSize)
-	}
-	if pageSize > 0 {
-		if bookmark, ok := ctx.GetInput(ivBookmark).(string); ok && bookmark != "" {
-			log.Debugf("bookmark=%s\n", bookmark)
+	if usePagination, ok := ctx.GetInput(ivUsePagination).(bool); ok && usePagination {
+		if psize, ok := ctx.GetInput(ivPageSize).(int); ok {
+			pageSize = int32(psize)
+			log.Debugf("pageSize=%d\n", pageSize)
+		}
+		if pageSize > 0 {
+			if bookmark, ok := ctx.GetInput(ivBookmark).(string); ok && bookmark != "" {
+				log.Debugf("bookmark=%s\n", bookmark)
+			}
 		}
 	}
 

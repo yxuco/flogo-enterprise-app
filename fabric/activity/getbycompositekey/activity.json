@@ -36,14 +36,18 @@
             }
         },
         {
-            "name": "pageSize",
-            "type": "number",
+            "name": "usePagination",
+            "type": "boolean",
             "required": true,
             "display": {
-                "name": "Result page size",
-                "description": "Result page size, default 0 to return all matching record"
+                "name": "Use pagination",
+                "description": "Specify result page size and starting bookmark"
             },
-            "value": 0
+            "value": false
+        },
+        {
+            "name": "pageSize",
+            "type": "number"
         },
         {
             "name": "start",

@@ -68,16 +68,18 @@ export class queryHandler extends WiServiceHandlerContribution {
                 }
             }
             return vresult;
-//        } else if (fieldName === "pageSize" || fieldName === "start" || fieldName === "bookmark") {
-//            let vresult: IValidationResult = ValidationResult.newValidationResult();
-//            let paginationField: IFieldDefinition = context.getField("usePagination");
-//            let valueField: IFieldDefinition = context.getField(fieldName);
-//            if (paginationField.value === true) {
-//                vresult.setVisible(true);
-//            } else {
-//                vresult.setVisible(false);
-//            }
-//            return vresult;
+        } else if (fieldName === "pageSize" || fieldName === "start" || fieldName === "bookmark") {
+            let vresult: IValidationResult = ValidationResult.newValidationResult();
+            let paginationField: IFieldDefinition = context.getField("usePagination");
+            let valueField: IFieldDefinition = context.getField(fieldName);
+            if (paginationField.value && paginationField.value === true) {
+                if (valueField.display && valueField.display.visible == false) {
+                    vresult.setVisible(true);
+                }
+            } else {
+                vresult.setVisible(false);
+            }
+            return vresult;
         } else if (fieldName === "result") {
             let vresult: IValidationResult = ValidationResult.newValidationResult();
             let resultField: IFieldDefinition = context.getField("result");

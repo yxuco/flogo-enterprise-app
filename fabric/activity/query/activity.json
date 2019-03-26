@@ -41,9 +41,9 @@
             "required": true,
             "display": {
                 "name": "Use pagination",
-                "description": "Specify result page size and bookmark"
+                "description": "Specify result page size and starting bookmark"
             },
-            "value": true
+            "value": false
         },
         {
             "name": "pageSize",
