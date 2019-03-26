@@ -2,7 +2,7 @@
 This is a sample smart contract for [Hyperledger Fabric](https://www.hyperledger.org/projects/fabric) implemented by a [TIBCO Flogo® Enterprise](https://docs.tibco.com/products/tibco-flogo-enterprise-2-4-0) model.
 
 ## Prerequisite
-- Download [TIBCO Flogo® Enterprise](https://edelivery.tibco.com/storefront/eval/tibco-flogo-enterprise/prod11810.html)
+- Download [TIBCO Flogo® Enterprise 2.4](https://edelivery.tibco.com/storefront/eval/tibco-flogo-enterprise/prod11810.html)
 - [Install Go](https://golang.org/doc/install)
 - Clone [Hyperledger Fabric Samples](https://github.com/hyperledger/fabric-samples)
 - Clone [This Flogo extension](https://github.com/yxuco/flogo-enterprise-app)

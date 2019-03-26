@@ -6,27 +6,25 @@
  "appModel": "1.0.0",
  "resources": [
   {
-   "id": "flow:Put_Record",
+   "id": "flow:Put_Record_2",
    "data": {
-    "name": "Put Record",
-    "description": "Store an audit record",
+    "name": "Put Record 2",
+    "description": "illustrate that transient attribute on trigger cannot be added after creation",
     "tasks": [
      {
       "id": "LogMessage",
       "name": "LogMessage",
       "activity": {
        "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
-       "input": {
-        "flowInfo": "false",
-        "addToFlow": "false"
-       },
+       "settings": {},
+       "input": {},
        "output": {},
        "mappings": {
         "input": [
          {
           "mapTo": "$INPUT['message']",
           "type": "expression",
-          "value": "string.concat(\"[put_record] \", $flow.parameters.user_txn_id)"
+          "value": "string.concat(\"[put_record_2] \", $flow.parameters.user_txn_id)"
          }
         ]
        }
@@ -37,13 +35,14 @@
       "name": "Put",
       "activity": {
        "ref": "github.com/yxuco/flogo-enterprise-app/fabric/activity/put",
+       "settings": {},
        "input": {
         "valueType": "object",
         "data": {
          "metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"txn_id\":{\"type\":\"string\"},\"txn_time\":{\"type\":\"string\"},\"sequence\":{\"type\":\"number\"},\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"},\"hash_type\":{\"type\":\"string\"},\"hash_value\":{\"type\":\"string\"}}}",
          "value": ""
         },
-        "compositeKeys": "{\n    \"user_txn_id\": [\"user_txn_id\"]\n}"
+        "compositeKeys": "{\n    \"user_txn_id\": [\"user_txn_id\"],\n    \"hash_value\": [\"hash_value\"]\n}"
        },
        "output": {
         "result": {
@@ -102,10 +101,8 @@
       "name": "LogMessage1",
       "activity": {
        "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
-       "input": {
-        "flowInfo": "false",
-        "addToFlow": "false"
-       },
+       "settings": {},
+       "input": {},
        "output": {},
        "mappings": {
         "input": [
@@ -123,42 +120,13 @@
       "name": "Return",
       "activity": {
        "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreturn",
+       "settings": {},
        "input": {
         "mappings": [
          {
-          "mapTo": "$INPUT['returns']['name']",
+          "mapTo": "$INPUT['returns']",
           "type": "assign",
-          "value": "$activity[Put].key"
-         },
-         {
-          "mapTo": "$INPUT['returns']['txn_id']",
-          "type": "assign",
-          "value": "$activity[Put].result.txn_id"
-         },
-         {
-          "mapTo": "$INPUT['returns']['txn_time']",
-          "type": "assign",
-          "value": "$activity[Put].result.txn_time"
-         },
-         {
-          "mapTo": "$INPUT['returns']['user_txn_id']",
-          "type": "assign",
-          "value": "$activity[Put].result.user_txn_id"
-         },
-         {
-          "mapTo": "$INPUT['returns']['data']",
-          "type": "assign",
-          "value": "$activity[Put].result.data"
-         },
-         {
-          "mapTo": "$INPUT['returns']['hash_type']",
-          "type": "assign",
-          "value": "$activity[Put].result.hash_type"
-         },
-         {
-          "mapTo": "$INPUT['returns']['hash_value']",
-          "type": "assign",
-          "value": "$activity[Put].result.hash_value"
+          "value": "$activity[Put].result"
          }
         ]
        },
@@ -211,7 +179,7 @@
        "type": "complex_object",
        "value": {
         "value": "",
-        "metadata": "{\"name\":{\"type\":\"string\"},\"txn_id\":{\"type\":\"string\"},\"txn_time\":{\"type\":\"string\"},\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"},\"hash_type\":{\"type\":\"string\"},\"hash_value\":{\"type\":\"string\"}}"
+        "metadata": "{\"txn_id\":{\"type\":\"string\"},\"txn_time\":{\"type\":\"string\"},\"sequence\":{\"type\":\"number\"},\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"},\"hash_type\":{\"type\":\"string\"},\"hash_value\":{\"type\":\"string\"}}"
        }
       }
      ]
@@ -222,24 +190,22 @@
    "id": "flow:Put_Records",
    "data": {
     "name": "Put Records",
-    "description": "Store multiple audit records in single transaction",
+    "description": "PutAll cannot get array position for key sequence, so this model supports only single record",
     "tasks": [
      {
       "id": "LogMessage2",
       "name": "LogMessage2",
       "activity": {
        "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
-       "input": {
-        "flowInfo": "false",
-        "addToFlow": "false"
-       },
+       "settings": {},
+       "input": {},
        "output": {},
        "mappings": {
         "input": [
          {
           "mapTo": "$INPUT['message']",
           "type": "expression",
-          "value": "string.concat(\"[put_records] \", $flow.parameters[0].user_txn_id, \" record-count\")"
+          "value": "string.concat(\"[put_records] \", $flow.parameters.records[0].user_txn_id)"
          }
         ]
        }
@@ -250,12 +216,13 @@
       "name": "PutAll",
       "activity": {
        "ref": "github.com/yxuco/flogo-enterprise-app/fabric/activity/putall",
+       "settings": {},
        "input": {
         "data": {
          "metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"},\"value\":{\"type\":\"object\",\"properties\":{\"txn_id\":{\"type\":\"string\"},\"txn_time\":{\"type\":\"string\"},\"sequence\":{\"type\":\"number\"},\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"},\"hash_type\":{\"type\":\"string\"},\"hash_value\":{\"type\":\"string\"}}}}}}",
          "value": ""
         },
-        "compositeKeys": "{\n    \"user_txn_id\": [\"user_txn_id\"]\n}"
+        "compositeKeys": "{\n    \"user_txn_id\": [\"user_txn_id\"],\n    \"hash_value\": [\"hash_value\"]\n}"
        },
        "output": {
         "result": {
@@ -268,7 +235,7 @@
          {
           "mapTo": "$INPUT['data']",
           "type": "array",
-          "value": "{\"to\":\"$INPUT['data']\",\"from\":\"$flow.parameters\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['key']\",\"from\":\"string.concat($flow.txID, \\\":\\\", $flow.txTime, \\\"position\\\")\",\"type\":\"expression\"},{\"to\":\"$INPUT.$$['value']['txn_id']\",\"from\":\"$flow.txID\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['value']['txn_time']\",\"from\":\"$flow.txTime\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['value']['sequence']\",\"from\":0,\"type\":\"literal\"},{\"to\":\"$INPUT.$$['value']['user_txn_id']\",\"from\":\"$.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['value']['data']\",\"from\":\"$.data\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['value']['hash_type']\",\"from\":\"SHA256\",\"type\":\"literal\"},{\"to\":\"$INPUT.$$['value']['hash_value']\",\"from\":\"add function to generate hash\",\"type\":\"literal\"}]}"
+          "value": "{\"to\":\"$INPUT['data']\",\"from\":\"$flow.parameters.records\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['key']\",\"from\":\"string.concat($flow.txID, \\\":\\\", $flow.txTime, \\\":0\\\")\",\"type\":\"expression\"},{\"to\":\"$INPUT.$$['value']['txn_id']\",\"from\":\"$flow.txID\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['value']['txn_time']\",\"from\":\"$flow.txTime\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['value']['sequence']\",\"from\":0,\"type\":\"literal\"},{\"to\":\"$INPUT.$$['value']['user_txn_id']\",\"from\":\"$.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['value']['data']\",\"from\":\"$.data\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['value']['hash_type']\",\"from\":\"SHA256\",\"type\":\"literal\"},{\"to\":\"$INPUT.$$['value']['hash_value']\",\"from\":\"calculate hash here\",\"type\":\"literal\"}]}"
          }
         ]
        }
@@ -279,17 +246,15 @@
       "name": "LogMessage3",
       "activity": {
        "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
-       "input": {
-        "flowInfo": "false",
-        "addToFlow": "false"
-       },
+       "settings": {},
+       "input": {},
        "output": {},
        "mappings": {
         "input": [
          {
           "mapTo": "$INPUT['message']",
           "type": "expression",
-          "value": "string.concat(\"PutAll: \", $activity[PutAll].message)"
+          "value": "string.concat(\"PUT_ALL: \", $activity[PutAll].message)"
          }
         ]
        }
@@ -300,12 +265,13 @@
       "name": "Return1",
       "activity": {
        "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreturn",
+       "settings": {},
        "input": {
         "mappings": [
          {
           "mapTo": "$INPUT['returns']",
           "type": "array",
-          "value": "{\"to\":\"$INPUT['returns']\",\"from\":\"$activity[PutAll].result\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['name']\",\"from\":\"$.key\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['txn_id']\",\"from\":\"$.value.txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['txn_time']\",\"from\":\"$.value.txn_time\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['sequence']\",\"from\":\"$.value.sequence\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['user_txn_id']\",\"from\":\"$.value.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['data']\",\"from\":\"$.value.data\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_type']\",\"from\":\"$.value.hash_type\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_value']\",\"from\":\"$.value.hash_value\",\"type\":\"assign\"}]}"
+          "value": "{\"to\":\"$INPUT['returns']\",\"from\":\"$activity[PutAll].result\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['key']\",\"from\":\"$.key\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['value']\",\"from\":\"$.value\",\"type\":\"assign\"}]}"
          }
         ]
        },
@@ -337,7 +303,11 @@
      "input": [
       {
        "name": "parameters",
-       "type": "array"
+       "type": "complex_object",
+       "value": {
+        "value": "",
+        "metadata": "{\"records\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"}}}}}"
+       }
       },
       {
        "name": "txID",
@@ -361,24 +331,22 @@
    "id": "flow:Put_Records_2",
    "data": {
     "name": "Put Records 2",
-    "description": "Alternative implementation of put records",
+    "description": "Cannot return all Put results, so returned only the last available Put record",
     "tasks": [
      {
       "id": "LogMessage4",
       "name": "LogMessage4",
       "activity": {
        "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
-       "input": {
-        "flowInfo": "false",
-        "addToFlow": "false"
-       },
+       "settings": {},
+       "input": {},
        "output": {},
        "mappings": {
         "input": [
          {
           "mapTo": "$INPUT['message']",
           "type": "expression",
-          "value": "string.concat(\"[put_records_2] \", $flow.parameters[0].user_txn_id)"
+          "value": "string.concat(\"[put_records_2] \", $flow.parameters.records[0].user_txn_id, \", count: \", string.tostring(array.count($flow.parameters.records)))"
          }
         ]
        }
@@ -388,18 +356,19 @@
       "id": "Put1",
       "name": "Put1",
       "settings": {
-       "iterate": "$flow.parameters"
+       "iterate": "$flow.parameters.records"
       },
       "type": "iterator",
       "activity": {
        "ref": "github.com/yxuco/flogo-enterprise-app/fabric/activity/put",
+       "settings": {},
        "input": {
         "valueType": "object",
         "data": {
          "metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"txn_id\":{\"type\":\"string\"},\"txn_time\":{\"type\":\"string\"},\"sequence\":{\"type\":\"number\"},\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"},\"hash_type\":{\"type\":\"string\"},\"hash_value\":{\"type\":\"string\"}}}",
          "value": ""
         },
-        "compositeKeys": "{\n    \"user_txn_id\": [\"user_txn_id\"]\n}"
+        "compositeKeys": "{\n    \"user_txn_id\": [\"user_txn_id\"],\n    \"hash_value\": [\"hash_value\"]\n}"
        },
        "output": {
         "result": {
@@ -409,6 +378,11 @@
        },
        "mappings": {
         "input": [
+         {
+          "mapTo": "$INPUT['key']",
+          "type": "expression",
+          "value": "string.concat($flow.txID, $flow.txTime, string.tostring($current.iteration.key))"
+         },
          {
           "mapTo": "$INPUT['data']['txn_id']",
           "type": "assign",
@@ -442,12 +416,7 @@
          {
           "mapTo": "$INPUT['data']['hash_value']",
           "type": "literal",
-          "value": "need func to generate hash"
-         },
-         {
-          "mapTo": "$INPUT['key']",
-          "type": "expression",
-          "value": "string.concat($flow.txID, \":\", $flow.txTime, \":\", string.tostring($current.iteration.key))"
+          "value": "generated-hash"
          }
         ]
        }
@@ -458,17 +427,15 @@
       "name": "LogMessage5",
       "activity": {
        "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
-       "input": {
-        "flowInfo": "false",
-        "addToFlow": "false"
-       },
+       "settings": {},
+       "input": {},
        "output": {},
        "mappings": {
         "input": [
          {
           "mapTo": "$INPUT['message']",
-          "type": "literal",
-          "value": "cannot collect all put records. only last record is available"
+          "type": "expression",
+          "value": "string.concat(\"PUT: \", $activity[Put1].message)"
          }
         ]
        }
@@ -479,12 +446,13 @@
       "name": "Return2",
       "activity": {
        "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreturn",
+       "settings": {},
        "input": {
         "mappings": [
          {
           "mapTo": "$INPUT['returns']",
           "type": "array",
-          "value": "{\"to\":\"$INPUT['returns']\",\"from\":\"NEWARRAY\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['name']\",\"from\":\"$activity[Put1].key\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['txn_id']\",\"from\":\"$activity[Put1].result.txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['txn_time']\",\"from\":\"$activity[Put1].result.txn_time\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['sequence']\",\"from\":\"$activity[Put1].result.sequence\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['user_txn_id']\",\"from\":\"$activity[Put1].result.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['data']\",\"from\":\"$activity[Put1].result.data\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_type']\",\"from\":\"$activity[Put1].result.hash_type\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_value']\",\"from\":\"$activity[Put1].result.hash_value\",\"type\":\"assign\"}]}"
+          "value": "{\"to\":\"$INPUT['returns']\",\"from\":\"NEWARRAY\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['key']\",\"from\":\"$activity[Put1].key\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['value']\",\"from\":\"$activity[Put1].result\",\"type\":\"assign\"}]}"
          }
         ]
        },
@@ -516,7 +484,11 @@
      "input": [
       {
        "name": "parameters",
-       "type": "array"
+       "type": "complex_object",
+       "value": {
+        "value": "",
+        "metadata": "{\"records\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"}}}}}"
+       }
       },
       {
        "name": "txID",
@@ -537,27 +509,25 @@
    }
   },
   {
-   "id": "flow:Put_Record_2",
+   "id": "flow:Put_Record",
    "data": {
-    "name": "Put Record 2",
-    "description": "",
+    "name": "Put Record",
+    "description": "Illustrate use of transient attributes that must be specified at creation time",
     "tasks": [
      {
       "id": "LogMessage6",
       "name": "LogMessage6",
       "activity": {
        "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
-       "input": {
-        "flowInfo": "false",
-        "addToFlow": "false"
-       },
+       "settings": {},
+       "input": {},
        "output": {},
        "mappings": {
         "input": [
          {
           "mapTo": "$INPUT['message']",
           "type": "expression",
-          "value": "string.concat(\"[put_record_2] \", $flow.parameters.user_txn_id, \" secret: \", $flow.transient.secret)"
+          "value": "string.concat(\"[put_record] \", $flow.parameters.user_txn_id, \" secret: \", $flow.transient.secret)"
          }
         ]
        }
@@ -568,13 +538,14 @@
       "name": "Put2",
       "activity": {
        "ref": "github.com/yxuco/flogo-enterprise-app/fabric/activity/put",
+       "settings": {},
        "input": {
         "valueType": "object",
         "data": {
-         "metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"txn_id\":{\"type\":\"string\"},\"txn_time\":{\"type\":\"string\"},\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"},\"hash_type\":{\"type\":\"string\"},\"hash_value\":{\"type\":\"string\"}}}",
+         "metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"txn_id\":{\"type\":\"string\"},\"txn_time\":{\"type\":\"string\"},\"sequence\":{\"type\":\"number\"},\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"},\"hash_type\":{\"type\":\"string\"},\"hash_value\":{\"type\":\"string\"}}}",
          "value": ""
         },
-        "compositeKeys": "{\n    \"user_txn_id\": [\"user_txn_id\"]\n}"
+        "compositeKeys": "{\n    \"user_txn_id\": [\"user_txn_id\"],\n    \"hash_value\": [\"hash_value\"]\n}"
        },
        "output": {
         "result": {
@@ -598,6 +569,11 @@
           "mapTo": "$INPUT['data']['txn_time']",
           "type": "assign",
           "value": "$flow.txTime"
+         },
+         {
+          "mapTo": "$INPUT['data']['sequence']",
+          "type": "literal",
+          "value": 0
          },
          {
           "mapTo": "$INPUT['data']['user_txn_id']",
@@ -628,45 +604,8 @@
       "name": "Return3",
       "activity": {
        "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreturn",
-       "input": {
-        "mappings": [
-         {
-          "mapTo": "$INPUT['returns']['name']",
-          "type": "assign",
-          "value": "$activity[Put2].key"
-         },
-         {
-          "mapTo": "$INPUT['returns']['txn_id']",
-          "type": "assign",
-          "value": "$activity[Put2].result.txn_id"
-         },
-         {
-          "mapTo": "$INPUT['returns']['txn_time']",
-          "type": "assign",
-          "value": "$activity[Put2].result.txn_time"
-         },
-         {
-          "mapTo": "$INPUT['returns']['user_txn_id']",
-          "type": "assign",
-          "value": "$activity[Put2].result.user_txn_id"
-         },
-         {
-          "mapTo": "$INPUT['returns']['data']",
-          "type": "assign",
-          "value": "$activity[Put2].result.data"
-         },
-         {
-          "mapTo": "$INPUT['returns']['hash_type']",
-          "type": "assign",
-          "value": "$activity[Put2].result.hash_type"
-         },
-         {
-          "mapTo": "$INPUT['returns']['hash_value']",
-          "type": "assign",
-          "value": "$activity[Put2].result.hash_value"
-         }
-        ]
-       },
+       "settings": {},
+       "input": {},
        "output": {}
       }
      }
@@ -718,7 +657,7 @@
        "type": "complex_object",
        "value": {
         "value": "",
-        "metadata": "{\"name\":{\"type\":\"string\"},\"txn_id\":{\"type\":\"string\"},\"txn_time\":{\"type\":\"string\"},\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"},\"hash_type\":{\"type\":\"string\"},\"hash_value\":{\"type\":\"string\"}}"
+        "metadata": "{\"txn_id\":{\"type\":\"string\"},\"txn_time\":{\"type\":\"string\"},\"sequence\":{\"type\":\"number\"},\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"},\"hash_type\":{\"type\":\"string\"},\"hash_value\":{\"type\":\"string\"}}"
        }
       }
      ]
@@ -730,14 +669,14 @@
   {
    "ref": "github.com/yxuco/flogo-enterprise-app/fabric/trigger/transaction",
    "name": "Transaction",
-   "description": "Store an audit record",
+   "description": "illustrate that transient attribute on trigger cannot be added after creation",
    "settings": {},
    "id": "Transaction",
    "handlers": [
     {
-     "description": "Store an audit record",
+     "description": "illustrate that transient attribute on trigger cannot be added after creation",
      "settings": {
-      "name": "put_record",
+      "name": "put_record_2",
       "validation": false
      },
      "outputs": {
@@ -752,7 +691,7 @@
      "action": {
       "ref": "github.com/TIBCOSoftware/flogo-contrib/action/flow",
       "data": {
-       "flowURI": "res://flow:Put_Record"
+       "flowURI": "res://flow:Put_Record_2"
       },
       "mappings": {
        "input": [
@@ -783,14 +722,14 @@
      }
     },
     {
-     "description": "Store multiple audit records in single transaction",
+     "description": "PutAll cannot get array position for key sequence, so this model supports only single record",
      "settings": {
       "name": "put_records",
       "validation": false
      },
      "outputs": {
       "parameters": {
-       "metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"}}}}",
+       "metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"records\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"}}}}}}",
        "value": ""
       },
       "txID": "",
@@ -805,9 +744,9 @@
       "mappings": {
        "input": [
         {
-         "mapTo": "$INPUT['parameters']",
+         "mapTo": "$INPUT['parameters']['records']",
          "type": "array",
-         "value": "{\"to\":\"$INPUT['parameters']\",\"from\":\"$.parameters\",\"type\":\"foreach\",\"fields\":[]}"
+         "value": "{\"to\":\"$INPUT['parameters']['records']\",\"from\":\"$.parameters.records\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['user_txn_id']\",\"from\":\"$.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['data']\",\"from\":\"$.data\",\"type\":\"assign\"}]}"
         },
         {
          "mapTo": "$INPUT['txID']",
@@ -824,21 +763,21 @@
         {
          "mapTo": "$INPUT['returns']",
          "type": "array",
-         "value": "{\"to\":\"$INPUT['returns']\",\"from\":\"$.returns\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['name']\",\"from\":\"$.name\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['txn_id']\",\"from\":\"$.txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['txn_time']\",\"from\":\"$.txn_time\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['sequence']\",\"from\":\"$.sequence\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['user_txn_id']\",\"from\":\"$.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['data']\",\"from\":\"$.data\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_type']\",\"from\":\"$.hash_type\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_value']\",\"from\":\"$.hash_value\",\"type\":\"assign\"}]}"
+         "value": "{\"to\":\"$INPUT['returns']\",\"from\":\"$.returns\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['key']\",\"from\":\"$.key\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['value']\",\"from\":\"$.value\",\"type\":\"assign\"}]}"
         }
        ]
       }
      }
     },
     {
-     "description": "Alternative implementation of put records",
+     "description": "Cannot return all Put results, so returned only the last available Put record",
      "settings": {
       "name": "put_records_2",
       "validation": false
      },
      "outputs": {
       "parameters": {
-       "metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"}}}}",
+       "metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"records\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"user_txn_id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"}}}}}}",
        "value": ""
       },
       "txID": "",
@@ -853,9 +792,9 @@
       "mappings": {
        "input": [
         {
-         "mapTo": "$INPUT['parameters']",
+         "mapTo": "$INPUT['parameters']['records']",
          "type": "array",
-         "value": "{\"to\":\"$INPUT['parameters']\",\"from\":\"$.parameters\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['user_txn_id']\",\"from\":\"$.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['data']\",\"from\":\"$.data\",\"type\":\"assign\"}]}"
+         "value": "{\"to\":\"$INPUT['parameters']['records']\",\"from\":\"$.parameters.records\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['user_txn_id']\",\"from\":\"$.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['data']\",\"from\":\"$.data\",\"type\":\"assign\"}]}"
         },
         {
          "mapTo": "$INPUT['txID']",
@@ -872,16 +811,16 @@
         {
          "mapTo": "$INPUT['returns']",
          "type": "array",
-         "value": "{\"to\":\"$INPUT['returns']\",\"from\":\"$.returns\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['name']\",\"from\":\"$.name\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['txn_id']\",\"from\":\"$.txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['txn_time']\",\"from\":\"$.txn_time\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['sequence']\",\"from\":\"$.sequence\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['user_txn_id']\",\"from\":\"$.user_txn_id\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['data']\",\"from\":\"$.data\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_type']\",\"from\":\"$.hash_type\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['hash_value']\",\"from\":\"$.hash_value\",\"type\":\"assign\"}]}"
+         "value": "{\"to\":\"$INPUT['returns']\",\"from\":\"$.returns\",\"type\":\"foreach\",\"fields\":[{\"to\":\"$INPUT.$$['key']\",\"from\":\"$.key\",\"type\":\"assign\"},{\"to\":\"$INPUT.$$['value']\",\"from\":\"$.value\",\"type\":\"assign\"}]}"
         }
        ]
       }
      }
     },
     {
-     "description": "",
+     "description": "Illustrate use of transient attributes that must be specified at creation time",
      "settings": {
-      "name": "put_record_2",
+      "name": "put_record",
       "validation": false
      },
      "outputs": {
@@ -900,11 +839,38 @@
      "action": {
       "ref": "github.com/TIBCOSoftware/flogo-contrib/action/flow",
       "data": {
-       "flowURI": "res://flow:Put_Record_2"
+       "flowURI": "res://flow:Put_Record"
       },
       "mappings": {
-       "input": [],
-       "output": []
+       "input": [
+        {
+         "mapTo": "$INPUT['parameters']",
+         "type": "assign",
+         "value": "$.parameters"
+        },
+        {
+         "mapTo": "$INPUT['transient']",
+         "type": "assign",
+         "value": "$.transient"
+        },
+        {
+         "mapTo": "$INPUT['txID']",
+         "type": "assign",
+         "value": "$.txID"
+        },
+        {
+         "mapTo": "$INPUT['txTime']",
+         "type": "assign",
+         "value": "$.txTime"
+        }
+       ],
+       "output": [
+        {
+         "mapTo": "$INPUT['returns']",
+         "type": "assign",
+         "value": "$.returns"
+        }
+       ]
       }
      }
     }
@@ -912,6 +878,7 @@
   }
  ],
  "properties": [],
- "ui": "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",
- "contrib": "W3sicmVmIjoiZ2l0aHViLmNvbS95eHVjby9mbG9nby1lbnRlcnByaXNlLWFwcC9mYWJyaWMiLCJzM2xvY2F0aW9uIjoie1VTRVJJRH0vZmFicmljIn0seyJyZWYiOiJnaXRodWIuY29tL1RJQkNPU29mdHdhcmUvZmxvZ28tY29udHJpYi9hY3Rpdml0eS9sb2ciLCJzM2xvY2F0aW9uIjoie1VTRVJJRH0vRGVmYXVsdC9hY3Rpdml0eS9sb2cifV0="
+ "ui": "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",
+ "contrib": "W3sicmVmIjoiZ2l0aHViLmNvbS95eHVjby9mbG9nby1lbnRlcnByaXNlLWFwcC9mYWJyaWMiLCJzM2xvY2F0aW9uIjoie1VTRVJJRH0vZmFicmljIn0seyJyZWYiOiJnaXRodWIuY29tL1RJQkNPU29mdHdhcmUvZmxvZ28tY29udHJpYi9hY3Rpdml0eS9sb2ciLCJzM2xvY2F0aW9uIjoie1VTRVJJRH0vRGVmYXVsdC9hY3Rpdml0eS9sb2cifV0=",
+ "connection": "UEsDBAoAAAAIACOjek4pu0wNBAAAAAIAAAAJAAAAY29ubi5qc29ui44FAFBLAQIUAAoAAAAIACOjek4pu0wNBAAAAAIAAAAJAAAAAAAAAAAAAAAAAAAAAABjb25uLmpzb25QSwUGAAAAAAEAAQA3AAAAKwAAAAAA"
 }
