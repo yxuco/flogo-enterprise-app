@@ -2,8 +2,7 @@
     "name": "fabric-transaction",
     "version": "1.0.0",
     "type": "flogo:trigger",
-    "shim": "plugin",
-    "title": " Fabric Transaction",
+    "title": "Transaction",
     "author": "TIBCO Software Inc.",
     "display": {
         "category": "fabric",
