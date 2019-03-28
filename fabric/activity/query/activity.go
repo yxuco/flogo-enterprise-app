@@ -237,7 +237,6 @@ func queryPrivateData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, 
 		log.Infof("no data returned for query %s on private collection %s\n", query, collection)
 		ctx.SetOutput(ovCode, 300)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("no data returned for query %s on private collection %s", query, collection))
-		ctx.SetOutput(ovCount, 0)
 		return true, nil
 	}
 	log.Debugf("query result from private collection %s: %s\n", collection, string(jsonBytes))
@@ -259,8 +258,6 @@ func queryPrivateData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, 
 		ctx.SetOutput(ovBookmark, "")
 		if vArray, ok := value.([]interface{}); ok {
 			ctx.SetOutput(ovCount, len(vArray))
-		} else {
-			ctx.SetOutput(ovCount, 0)
 		}
 	}
 	return true, nil
@@ -315,7 +312,6 @@ func queryData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, query s
 		log.Infof("no data returned for query %s\n", query)
 		ctx.SetOutput(ovCode, 300)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("no data returned for query %s", query))
-		ctx.SetOutput(ovCount, 0)
 		return true, nil
 	}
 	log.Debugf("query returned data: %s\n", string(jsonBytes))
@@ -335,14 +331,12 @@ func queryData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, query s
 		result.Value = value
 		ctx.SetOutput(ovResult, result)
 		if resultMetadata != nil {
-			ctx.SetOutput(ovCount, resultMetadata.FetchedRecordsCount)
+			ctx.SetOutput(ovCount, int(resultMetadata.FetchedRecordsCount))
 			ctx.SetOutput(ovBookmark, resultMetadata.Bookmark)
 		} else {
 			ctx.SetOutput(ovBookmark, "")
 			if vArray, ok := value.([]interface{}); ok {
 				ctx.SetOutput(ovCount, len(vArray))
-			} else {
-				ctx.SetOutput(ovCount, 0)
 			}
 		}
 	}

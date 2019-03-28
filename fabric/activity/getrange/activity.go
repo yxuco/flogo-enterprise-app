@@ -137,7 +137,6 @@ func retrievePrivateRange(ctx activity.Context, ccshim shim.ChaincodeStubInterfa
 		log.Infof("no data found in key range [%s, %s) from private collection %s\n", startKey, endKey, collection)
 		ctx.SetOutput(ovCode, 300)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found in key range [%s, %s) from private collection %s", startKey, endKey, collection))
-		ctx.SetOutput(ovCount, 0)
 		return true, nil
 	}
 	log.Debugf("retrieved data range from private collection %s: %s\n", collection, string(jsonBytes))
@@ -159,8 +158,6 @@ func retrievePrivateRange(ctx activity.Context, ccshim shim.ChaincodeStubInterfa
 		ctx.SetOutput(ovBookmark, "")
 		if vArray, ok := value.([]interface{}); ok {
 			ctx.SetOutput(ovCount, len(vArray))
-		} else {
-			ctx.SetOutput(ovCount, 0)
 		}
 	}
 	return true, nil
@@ -215,7 +212,6 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 		log.Infof("no data found in key range [%s, %s)\n", startKey, endKey)
 		ctx.SetOutput(ovCode, 300)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found in key range [%s, %s)", startKey, endKey))
-		ctx.SetOutput(ovCount, 0)
 		return true, nil
 	}
 	log.Debugf("retrieved data from ledger: %s\n", string(jsonBytes))
@@ -237,16 +233,12 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 		log.Debugf("result metatadata: %+v\n", *resultMetadata)
 		if resultMetadata != nil {
 			log.Debugf("set count %v and bookmark %s\n", resultMetadata.FetchedRecordsCount, resultMetadata.Bookmark)
-			ctx.SetOutput(ovCount, float64(resultMetadata.FetchedRecordsCount))
+			ctx.SetOutput(ovCount, int(resultMetadata.FetchedRecordsCount))
 			ctx.SetOutput(ovBookmark, resultMetadata.Bookmark)
-			c := ctx.GetOutput(ovCount)
-			log.Debugf("verify count: %T, %v\n", c, c)
 		} else {
 			ctx.SetOutput(ovBookmark, "")
 			if vArray, ok := value.([]interface{}); ok {
 				ctx.SetOutput(ovCount, len(vArray))
-			} else {
-				ctx.SetOutput(ovCount, 0)
 			}
 		}
 	}

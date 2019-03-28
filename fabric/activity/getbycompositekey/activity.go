@@ -173,7 +173,6 @@ func retrievePrivateDataByCompositeKey(ctx activity.Context, ccshim shim.Chainco
 		log.Infof("no data found for composite key %s and value %+v from private collection %s\n", keyName, values, collection)
 		ctx.SetOutput(ovCode, 300)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found for composite key %s and value %+v from private collection %s\n", keyName, values, collection))
-		ctx.SetOutput(ovCount, 0)
 		return true, nil
 	}
 	log.Debugf("retrieved data from private collection %s: %s\n", collection, string(jsonBytes))
@@ -195,8 +194,6 @@ func retrievePrivateDataByCompositeKey(ctx activity.Context, ccshim shim.Chainco
 		ctx.SetOutput(ovBookmark, "")
 		if vArray, ok := value.([]interface{}); ok {
 			ctx.SetOutput(ovCount, len(vArray))
-		} else {
-			ctx.SetOutput(ovCount, 0)
 		}
 	}
 	return true, nil
@@ -251,7 +248,6 @@ func retrieveByCompositeKey(ctx activity.Context, ccshim shim.ChaincodeStubInter
 		log.Infof("no data found for composite key %s value %+v\n", keyName, values)
 		ctx.SetOutput(ovCode, 300)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("no data found for composite key %s value %+v", keyName, values))
-		ctx.SetOutput(ovCount, 0)
 		return true, nil
 	}
 	log.Debugf("retrieved data from ledger: %s\n", string(jsonBytes))
@@ -272,7 +268,7 @@ func retrieveByCompositeKey(ctx activity.Context, ccshim shim.ChaincodeStubInter
 		ctx.SetOutput(ovResult, result)
 		if resultMetadata != nil {
 			log.Debugf("set pagination metadata: count=%d, bookmark=%s\n", resultMetadata.FetchedRecordsCount, resultMetadata.Bookmark)
-			ctx.SetOutput(ovCount, resultMetadata.FetchedRecordsCount)
+			ctx.SetOutput(ovCount, int(resultMetadata.FetchedRecordsCount))
 			ctx.SetOutput(ovBookmark, resultMetadata.Bookmark)
 		} else {
 			ctx.SetOutput(ovBookmark, "")
@@ -280,8 +276,7 @@ func retrieveByCompositeKey(ctx activity.Context, ccshim shim.ChaincodeStubInter
 				log.Debugf("set value array lenth: \n", len(vArray))
 				ctx.SetOutput(ovCount, len(vArray))
 			} else {
-				log.Debug("result value is not array. set count=0\n")
-				ctx.SetOutput(ovCount, 0)
+				log.Debug("result value is not array\n")
 			}
 		}
 	}
