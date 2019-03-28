@@ -3,6 +3,7 @@ package query
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
@@ -191,12 +192,12 @@ func queryPrivateData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, 
 	pageSize := int32(0)
 	bookmark := ""
 	if usePagination, ok := ctx.GetInput(ivUsePagination).(bool); ok && usePagination {
-		if psize, ok := ctx.GetInput(ivPageSize).(int); ok {
-			pageSize = int32(psize)
+		if f, err := strconv.ParseFloat(fmt.Sprintf("%v", ctx.GetInput(ivPageSize)), 64); err == nil {
+			pageSize = int32(f)
 			log.Debugf("pageSize=%d\n", pageSize)
 		}
 		if pageSize > 0 {
-			if bookmark, ok := ctx.GetInput(ivBookmark).(string); ok && bookmark != "" {
+			if bookmark, ok = ctx.GetInput(ivBookmark).(string); ok && bookmark != "" {
 				log.Debugf("bookmark=%s\n", bookmark)
 			}
 		}
@@ -270,12 +271,12 @@ func queryData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, query s
 	pageSize := int32(0)
 	bookmark := ""
 	if usePagination, ok := ctx.GetInput(ivUsePagination).(bool); ok && usePagination {
-		if psize, ok := ctx.GetInput(ivPageSize).(int); ok {
-			pageSize = int32(psize)
+		if f, err := strconv.ParseFloat(fmt.Sprintf("%v", ctx.GetInput(ivPageSize)), 64); err == nil {
+			pageSize = int32(f)
 			log.Debugf("pageSize=%d\n", pageSize)
 		}
 		if pageSize > 0 {
-			if bookmark, ok := ctx.GetInput(ivBookmark).(string); ok && bookmark != "" {
+			if bookmark, ok = ctx.GetInput(ivBookmark).(string); ok && bookmark != "" {
 				log.Debugf("bookmark=%s\n", bookmark)
 			}
 		}

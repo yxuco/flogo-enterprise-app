@@ -92,12 +92,12 @@ func retrievePrivateRange(ctx activity.Context, ccshim shim.ChaincodeStubInterfa
 	pageSize := int32(0)
 	bookmark := ""
 	if usePagination, ok := ctx.GetInput(ivUsePagination).(bool); ok && usePagination {
-		if psize, ok := ctx.GetInput(ivPageSize).(int); ok {
-			pageSize = int32(psize)
+		if f, err := strconv.ParseFloat(fmt.Sprintf("%v", ctx.GetInput(ivPageSize)), 64); err == nil {
+			pageSize = int32(f)
 			log.Debugf("pageSize=%d\n", pageSize)
 		}
 		if pageSize > 0 {
-			if bookmark, ok := ctx.GetInput(ivBookmark).(string); ok && bookmark != "" {
+			if bookmark, ok = ctx.GetInput(ivBookmark).(string); ok && bookmark != "" {
 				log.Debugf("bookmark=%s\n", bookmark)
 			}
 		}
@@ -170,21 +170,13 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 	// check pagination
 	pageSize := int32(0)
 	bookmark := ""
-	usePaging, ok := ctx.GetInput(ivUsePagination).(bool)
-	log.Infof("paging: %T, %+v, ok=%t\n", usePaging, usePaging, ok)
-	if ok {
-		log.Info("usePaging is ok\n")
-	}
-	if usePaging {
-		log.Info("usePaging is true\n")
-	}
 	if usePagination, ok := ctx.GetInput(ivUsePagination).(bool); ok && usePagination {
 		if f, err := strconv.ParseFloat(fmt.Sprintf("%v", ctx.GetInput(ivPageSize)), 64); err == nil {
 			pageSize = int32(f)
 			log.Debugf("pageSize=%d\n", pageSize)
 		}
 		if pageSize > 0 {
-			if bookmark, ok := ctx.GetInput(ivBookmark).(string); ok && bookmark != "" {
+			if bookmark, ok = ctx.GetInput(ivBookmark).(string); ok && bookmark != "" {
 				log.Debugf("bookmark=%s\n", bookmark)
 			}
 		}
@@ -242,6 +234,7 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 		log.Debugf("set activity output result: %+v\n", value)
 		result.Value = value
 		ctx.SetOutput(ovResult, result)
+		log.Debugf("result metatadata: %+v\n", *resultMetadata)
 		if resultMetadata != nil {
 			ctx.SetOutput(ovCount, resultMetadata.FetchedRecordsCount)
 			ctx.SetOutput(ovBookmark, resultMetadata.Bookmark)
