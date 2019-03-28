@@ -343,6 +343,9 @@ func queryData(ctx activity.Context, ccshim shim.ChaincodeStubInterface, query s
 		result.Value = value
 		ctx.SetOutput(ovResult, result)
 		if resultMetadata != nil {
+			// Note: bookmark of the last page is returned repeatedly for rich query
+			// this may be a bug. Pagination of range query returns blank when returned last page
+			log.Debugf("set pagination metadata: count=%d, bookmark=%s\n", resultMetadata.FetchedRecordsCount, resultMetadata.Bookmark)
 			ctx.SetOutput(ovCount, int(resultMetadata.FetchedRecordsCount))
 			ctx.SetOutput(ovBookmark, resultMetadata.Bookmark)
 		} else {

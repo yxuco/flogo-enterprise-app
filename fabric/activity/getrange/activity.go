@@ -231,6 +231,7 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 		result.Value = value
 		ctx.SetOutput(ovResult, result)
 		if resultMetadata != nil {
+			// Returned bookmark is blank when reached last page
 			log.Debugf("set count %v and bookmark %s\n", resultMetadata.FetchedRecordsCount, resultMetadata.Bookmark)
 			ctx.SetOutput(ovCount, int(resultMetadata.FetchedRecordsCount))
 			ctx.SetOutput(ovBookmark, resultMetadata.Bookmark)
