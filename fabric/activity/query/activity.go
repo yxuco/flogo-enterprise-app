@@ -76,6 +76,7 @@ func (a *FabricQueryActivity) Eval(ctx activity.Context) (done bool, err error) 
 		ctx.SetOutput(ovMessage, err.Error())
 		return false, err
 	}
+	log.Debugf("query statement: %s\n", queryStatement)
 
 	// get chaincode stub
 	stub, err := common.GetChaincodeStub(ctx)
