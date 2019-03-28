@@ -236,8 +236,11 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 		ctx.SetOutput(ovResult, result)
 		log.Debugf("result metatadata: %+v\n", *resultMetadata)
 		if resultMetadata != nil {
+			log.Debugf("set count %v and bookmark %s\n", resultMetadata.FetchedRecordsCount, resultMetadata.Bookmark)
 			ctx.SetOutput(ovCount, resultMetadata.FetchedRecordsCount)
 			ctx.SetOutput(ovBookmark, resultMetadata.Bookmark)
+			c := ctx.GetOutput(ovCount)
+			log.Debugf("verify count: %T, %v\n", c, c)
 		} else {
 			ctx.SetOutput(ovBookmark, "")
 			if vArray, ok := value.([]interface{}); ok {
