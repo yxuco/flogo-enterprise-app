@@ -169,6 +169,8 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 	// check pagination
 	pageSize := int32(0)
 	bookmark := ""
+	usePaging := ctx.GetInput(ivUsePagination)
+	log.Infof("paging: %T, %+v\n", usePaging, usePaging)
 	if usePagination, ok := ctx.GetInput(ivUsePagination).(bool); ok && usePagination {
 		if psize, ok := ctx.GetInput(ivPageSize).(int); ok {
 			pageSize = int32(psize)

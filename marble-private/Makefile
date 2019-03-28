@@ -33,3 +33,4 @@ deploy: build
 	cp $(APP_NAME)/bin/linux_amd64/$(APP_NAME) $(APP_NAME)/src/$(APP_NAME) && \
 	rm -Rf $(CC_DEPLOY)/$(APP_NAME) && \
 	cp -Rf $(APP_NAME)/src/$(APP_NAME) $(CC_DEPLOY)
+	cp -Rf META-INF $(CC_DEPLOY)/$(APP_NAME)
