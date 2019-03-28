@@ -3,6 +3,7 @@ package getrange
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
@@ -178,10 +179,8 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 		log.Info("usePaging is true\n")
 	}
 	if usePagination, ok := ctx.GetInput(ivUsePagination).(bool); ok && usePagination {
-		ipSize := ctx.GetInput(ivPageSize)
-		log.Infof("page-size: %T, %+v\n", ipSize, ipSize)
-		if psize, ok := ctx.GetInput(ivPageSize).(int); ok {
-			pageSize = int32(psize)
+		if f, err := strconv.ParseFloat(fmt.Sprintf("%v", ctx.GetInput(ivPageSize)), 64); err != nil {
+			pageSize = int32(f)
 			log.Debugf("pageSize=%d\n", pageSize)
 		}
 		if pageSize > 0 {
