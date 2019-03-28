@@ -179,7 +179,7 @@ func retrieveRange(ctx activity.Context, ccshim shim.ChaincodeStubInterface, sta
 		log.Info("usePaging is true\n")
 	}
 	if usePagination, ok := ctx.GetInput(ivUsePagination).(bool); ok && usePagination {
-		if f, err := strconv.ParseFloat(fmt.Sprintf("%v", ctx.GetInput(ivPageSize)), 64); err != nil {
+		if f, err := strconv.ParseFloat(fmt.Sprintf("%v", ctx.GetInput(ivPageSize)), 64); err == nil {
 			pageSize = int32(f)
 			log.Debugf("pageSize=%d\n", pageSize)
 		}
