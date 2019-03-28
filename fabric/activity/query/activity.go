@@ -153,6 +153,17 @@ func prepareQueryStatement(query string, queryParams map[string]interface{}, par
 		return query, nil
 	}
 
+	if len(paramTypes) == 1 {
+		for k := range paramTypes {
+			// check if the single parameter is the query string
+			pname := fmt.Sprintf(`"$%s"`, k)
+			if pname == strings.TrimSpace(query) {
+				log.Debugf("query statement is the first param: %v\n", queryParams[k])
+				return fmt.Sprintf("%v", queryParams[k]), nil
+			}
+		}
+	}
+
 	// collect replacer args
 	var args []string
 	for pname, ptype := range paramTypes {
