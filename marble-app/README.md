@@ -4,8 +4,23 @@ This is a the sample chaincode, [marbles02](https://github.com/hyperledger/fabri
 ## Prerequisite
 - Download [TIBCO Flogo® Enterprise 2.4](https://edelivery.tibco.com/storefront/eval/tibco-flogo-enterprise/prod11810.html)
 - [Install Go](https://golang.org/doc/install)
+- Clone [Hyperledger Fabric](https://github.com/hyperledger/fabric)
 - Clone [Hyperledger Fabric Samples](https://github.com/hyperledger/fabric-samples)
+- Download and install [flogo-cli](https://github.com/TIBCOSoftware/flogo-cli)
 - Clone [This Flogo extension](https://github.com/yxuco/flogo-enterprise-app)
+
+There are different ways to clone these packages.  I put them under $GOPATH after installing Go, i.e.,
+```
+go get -u github.com/hyperledger/fabric
+go get -u github.com/hyperledger/fabric-samples
+go get -u github.com/TIBCOSoftware/flogo-cli/...
+go get -u github.com/yxuco/flogo-enterprise-app
+```
+Bootstrap fabric-samples
+```
+cd $GOPATH/src/github.com/hyperledger/fabric-samples
+./scripts/bootstrap.sh
+```
 
 ## Edit smart contract
 - Start TIBCO Flogo® Enterprise as described in [User's Guide](https://docs.tibco.com/pub/flogo/2.4.0/doc/pdf/TIB_flogo_2.4_users_guide.pdf?id=1)
@@ -21,7 +36,7 @@ This is a the sample chaincode, [marbles02](https://github.com/hyperledger/fabri
 ## Test chaincode in fabric devmode
 Start Hyperledger Fabric test network in dev mode:
 ```
-cd $GOPATH//src/github.com/hyperledger/fabric-samples/chaincode-docker-devmode
+cd $GOPATH/src/github.com/hyperledger/fabric-samples/chaincode-docker-devmode
 docker-compose -f docker-compose-simple.yaml up
 ```
 In another terminal, start the chaincode:
@@ -69,6 +84,9 @@ Using `cli` container, send marble transaction messages:
 ```
 ORG1_ARGS="--peerAddresses peer0.org1.example.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt"
 ORG2_ARGS="--peerAddresses peer0.org2.example.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt"
+
+# For Ubuntu only, change the ORG2_ARGS to use port 9051, i.e.,
+ORG2_ARGS="--peerAddresses peer0.org2.example.com:9051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt"
 
 # insert test data
 peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_cc $ORG1_ARGS $ORG2_ARGS -c '{"Args":["initMarble","marble1","blue","35","tom"]}'
