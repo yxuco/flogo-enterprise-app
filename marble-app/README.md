@@ -18,7 +18,7 @@ This is a the sample chaincode, [marbles02](https://github.com/hyperledger/fabri
 - In the `marble-app` folder, execute `make create` to generate source code for the chaincode.  This step downloads all dependent packages, and thus may take a while depending on the network speed.
 - Execute `make deploy` to deploy the chaincode to the `fabric-samples` chaincode folder.  Note: you may need to edit the [`Makefile`](https://github.com/yxuco/flogo-enterprise-app/blob/master/marble-app/Makefile) and set `CC_DEPLOY` to match the installation folder of `fabric-samples` if it is not downloaded to the default location under `$GOPATH`.
 
-## Test smart contract
+## Test chaincode in fabric devmode
 Start Hyperledger Fabric test network in dev mode:
 ```
 cd $GOPATH//src/github.com/hyperledger/fabric-samples/chaincode-docker-devmode
@@ -47,4 +47,54 @@ peer chaincode invoke -C myc -n marble_cc -c '{"Args":["transferMarblesBasedOnCo
 peer chaincode query -C myc -n marble_cc -c '{"Args":["getHistoryForMarble","marble1"]}'
 peer chaincode invoke -C myc -n marble_cc -c '{"Args":["delete","marble1"]}'
 peer chaincode query -C myc -n marble_cc -c '{"Args":["getHistoryForMarble","marble1"]}'
+```
+
+## Test chaincode with multi-org fabric network
+Start Hyperledger Fabric first-network with CouchDB:
+```
+cd $GOPATH//src/github.com/hyperledger/fabric-samples/first-network
+./byfn.sh up -s couchdb
+```
+Using the `cli` container, install the `marble` chaincode on both `org1` and `org2`, and then instantiate it.
+```
+docker exec -it cli bash
+. scripts/utils.sh
+peer chaincode install -n marble_cc -v 1.0 -p github.com/chaincode/marble_cc
+setGlobals 0 2
+peer chaincode install -n marble_cc -v 1.0 -p github.com/chaincode/marble_cc
+ORDERER_ARGS="-o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
+peer chaincode instantiate $ORDERER_ARGS -C mychannel -n marble_cc -v 1.0 -c '{"Args":["init"]}' -P "AND ('Org1MSP.peer','Org2MSP.peer')"
+```
+Using `cli` container, send marble transaction messages:
+```
+ORG1_ARGS="--peerAddresses peer0.org1.example.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt"
+ORG2_ARGS="--peerAddresses peer0.org2.example.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt"
+
+# insert test data
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_cc $ORG1_ARGS $ORG2_ARGS -c '{"Args":["initMarble","marble1","blue","35","tom"]}'
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_cc $ORG1_ARGS $ORG2_ARGS -c '{"Args":["initMarble","marble2","red","50","tom"]}'
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_cc $ORG1_ARGS $ORG2_ARGS -c '{"Args":["initMarble","marble3","blue","70","tom"]}'
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_cc $ORG1_ARGS $ORG2_ARGS -c '{"Args":["initMarble","marble4","purple","80","tom"]}'
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_cc $ORG1_ARGS $ORG2_ARGS -c '{"Args":["initMarble","marble5","purple","90","tom"]}'
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_cc $ORG1_ARGS $ORG2_ARGS -c '{"Args":["initMarble","marble6","purple","100","tom"]}'
+
+# transfer marble ownership
+setGlobals 0 1
+peer chaincode query -C mychannel -n marble_cc -c '{"Args":["readMarble","marble2"]}'
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_cc $ORG1_ARGS $ORG2_ARGS -c '{"Args":["transferMarble","marble2","jerry"]}'
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_cc $ORG1_ARGS $ORG2_ARGS -c '{"Args":["transferMarblesBasedOnColor","blue","jerry"]}'
+peer chaincode query -C mychannel -n marble_cc -c '{"Args":["getMarblesByRange","marble1","marble5"]}'
+
+# delete marble state, not history
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_cc $ORG1_ARGS $ORG2_ARGS -c '{"Args":["delete","marble1"]}'
+peer chaincode query -C mychannel -n marble_cc -c '{"Args":["getHistoryForMarble","marble1"]}'
+
+# rich query
+peer chaincode query -C mychannel -n marble_cc -c '{"Args":["queryMarblesByOwner","jerry"]}'
+
+# query pagination using page-size and starting bookmark
+peer chaincode query -C mychannel -n marble_cc -c '{"Args":["getMarblesByRangeWithPagination","marble1","marble9", "3", ""]}'
+peer chaincode query -C mychannel -n marble_cc -c '{"Args":["getMarblesByRangeWithPagination","marble1","marble9", "3", "marble5"]}'
+peer chaincode query -C mychannel -n marble_cc -c '{"Args":["queryMarbles","{\"selector\":{\"docType\":\"marble\",\"owner\":\"tom\"}}"]}'
+peer chaincode query -C mychannel -n marble_cc -c '{"Args":["queryMarblesWithPagination","{\"selector\":{\"docType\":\"marble\",\"owner\":\"tom\"}}", "2", ""]}'
 ```
