@@ -72,6 +72,11 @@ peer chaincode invoke -C myc -n marble_cc -c '{"Args":["delete","marble1"]}'
 peer chaincode query -C myc -n marble_cc -c '{"Args":["getHistoryForMarble","marble1"]}'
 ```
 
+`Ctrl+C` and `exit` the docker containers, and then clean up the docker processes,
+```
+docker rm $(docker ps -a | grep hyperledger | awk '{print $1}')
+```
+
 ## Test chaincode with multi-org fabric network
 Start Hyperledger Fabric first-network with CouchDB:
 ```
