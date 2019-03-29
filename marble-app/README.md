@@ -98,3 +98,11 @@ peer chaincode query -C mychannel -n marble_cc -c '{"Args":["getMarblesByRangeWi
 peer chaincode query -C mychannel -n marble_cc -c '{"Args":["queryMarbles","{\"selector\":{\"docType\":\"marble\",\"owner\":\"tom\"}}"]}'
 peer chaincode query -C mychannel -n marble_cc -c '{"Args":["queryMarblesWithPagination","{\"selector\":{\"docType\":\"marble\",\"owner\":\"tom\"}}", "2", ""]}'
 ```
+
+Exit the `cli` shell, and then stop and cleanup the Fabric `first-network`.
+```
+exit
+./byfn.sh down
+docker rm $(docker ps -a | grep dev-peer | awk '{print $1}')
+docker rmi $(docker images | grep dev-peer | awk '{print $3}')
+```

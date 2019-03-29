@@ -80,3 +80,11 @@ peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_private_cc -c '{"Args
 # verify deleted marble2
 peer chaincode query -C mychannel -n marble_private_cc -c '{"Args":["queryMarblesByOwner","jerry"]}'
 ```
+
+Exit the `cli` shell, and then stop and cleanup the Fabric `first-network`.
+```
+exit
+./byfn.sh down
+docker rm $(docker ps -a | grep dev-peer | awk '{print $1}')
+docker rmi $(docker images | grep dev-peer | awk '{print $3}')
+```
