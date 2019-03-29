@@ -18,6 +18,65 @@ This is a the sample chaincode using private collections and transient transacti
 - In the `marble-private` folder, execute `make create` to generate source code for the chaincode.  This step downloads all dependent packages, and thus may take a while depending on the network speed.
 - Execute `make deploy` to deploy the chaincode to the `fabric-samples` chaincode folder.  Note: you may need to edit the [`Makefile`](https://github.com/yxuco/flogo-enterprise-app/blob/master/marble-private/Makefile) and set `CC_DEPLOY` to match the installation folder of `fabric-samples` if it is not downloaded to the default location under `$GOPATH`.
 
-## Test smart contract
+## Test chaincode with multi-org fabric network
+Start Hyperledger Fabric first-network with CouchDB:
+```
+cd $GOPATH//src/github.com/hyperledger/fabric-samples/first-network
+./byfn.sh up -s couchdb
+```
+Using the `cli` container, install the `marble_private` chaincode on all 4 peers of `org1` and `org2`, and then instantiate it.
+```
+docker exec -it cli bash
+. scripts/utils.sh
+peer chaincode install -n marble_private_cc -v 1.0 -p github.com/chaincode/marble_private_cc
+setGlobals 1 1
+peer chaincode install -n marble_private_cc -v 1.0 -p github.com/chaincode/marble_private_cc
+setGlobals 0 2
+peer chaincode install -n marble_private_cc -v 1.0 -p github.com/chaincode/marble_private_cc
+setGlobals 1 2
+peer chaincode install -n marble_private_cc -v 1.0 -p github.com/chaincode/marble_private_cc
 
-Similar to the [marble-app](https://github.com/yxuco/flogo-enterprise-app/blob/master/marble-app) sample, except that it requires setting up private collections.
+ORDERER_ARGS="-o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
+peer chaincode instantiate $ORDERER_ARGS -C mychannel -n marble_private_cc -v 1.0 -c '{"Args":["init"]}' -P "OR ('Org1MSP.peer','Org2MSP.peer')" --collections-config /opt/gopath/src/github.com/chaincode/marbles02_private/collections_config.json
+```
+Using `cli` container, send marble transaction messages:
+```
+# test insert and read access permission
+setGlobals 0 1
+MARBLE=$(echo -n "{\"name\":\"marble1\",\"color\":\"blue\",\"size\":35,\"owner\":\"tom\",\"price\":99}" | base64 | tr -d \\n)
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_private_cc -c '{"Args":["initMarble"]}' --transient "{\"marble\":\"$MARBLE\"}"
+peer chaincode query -C mychannel -n marble_private_cc -c '{"Args":["readMarble","marble1"]}'
+peer chaincode query -C mychannel -n marble_private_cc -c '{"Args":["readMarblePrivateDetails","marble1"]}'
+setGlobals 0 2
+peer chaincode query -C mychannel -n marble_private_cc -c '{"Args":["readMarble","marble1"]}'
+# following should fail due to no read access permission 
+peer chaincode query -C mychannel -n marble_private_cc -c '{"Args":["readMarblePrivateDetails","marble1"]}'
+
+# test more insert and transfer owner, and purge of marble1 after 3 blocks
+setGlobals 0 1
+# block +1
+MARBLE=$(echo -n "{\"name\":\"marble2\",\"color\":\"red\",\"size\":50,\"owner\":\"tom\",\"price\":199}" | base64 | tr -d \\n)
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_private_cc -c '{"Args":["initMarble"]}' --transient "{\"marble\":\"$MARBLE\"}"
+# block +2
+MARBLE_OWNER=$(echo -n "{\"name\":\"marble2\",\"owner\":\"jerry\"}" | base64 | tr -d \\n)
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_private_cc -c '{"Args":["transferMarble"]}' --transient "{\"marble_owner\":\"$MARBLE_OWNER\"}"
+# block +3
+MARBLE=$(echo -n "{\"name\":\"marble3\",\"color\":\"blue\",\"size\":70,\"owner\":\"tom\",\"price\":299}" | base64 | tr -d \\n)
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_private_cc -c '{"Args":["initMarble"]}' --transient "{\"marble\":\"$MARBLE\"}"
+
+# marble1 should still be available
+peer chaincode query -C mychannel -n marble_private_cc -c '{"Args":["readMarblePrivateDetails","marble1"]}'
+# block +4
+MARBLE_OWNER=$(echo -n "{\"name\":\"marble3\",\"owner\":\"jerry\"}" | base64 | tr -d \\n)
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_private_cc -c '{"Args":["transferMarble"]}' --transient "{\"marble_owner\":\"$MARBLE_OWNER\"}"
+# marble1 details purged after 3 blocks, so this returns error
+peer chaincode query -C mychannel -n marble_private_cc -c '{"Args":["readMarblePrivateDetails","marble1"]}'
+
+# test query
+peer chaincode query -C mychannel -n marble_private_cc -c '{"Args":["getMarblesByRange","marble1", "marble3"]}'
+peer chaincode query -C mychannel -n marble_private_cc -c '{"Args":["queryMarblesByOwner","jerry"]}'
+MARBLE_DELETE=$(echo -n "{\"name\":\"marble2\"}" | base64 | tr -d \\n)
+peer chaincode invoke $ORDERER_ARGS -C mychannel -n marble_private_cc -c '{"Args":["delete"]}' --transient "{\"marble_delete\":\"$MARBLE_DELETE\"}"
+# verify deleted marble2
+peer chaincode query -C mychannel -n marble_private_cc -c '{"Args":["queryMarblesByOwner","jerry"]}'
+```
