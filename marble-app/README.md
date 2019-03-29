@@ -31,7 +31,15 @@ cd $GOPATH/src/github.com/hyperledger/fabric-samples
 ## Build and deploy chaincode to Hyperledger Fabric
 - Export the Flogo App, and copy the downloaded model file, i.e., [`marble_app.json`](https://github.com/yxuco/flogo-enterprise-app/blob/master/marble-app/marble_app.json) to folder `marble-app`.  You can skip this step if you did not modify the app in Flogo® Enterprise.
 - In the `marble-app` folder, execute `make create` to generate source code for the chaincode.  This step downloads all dependent packages, and thus may take a while depending on the network speed.
-- Execute `make deploy` to deploy the chaincode to the `fabric-samples` chaincode folder.  Note: you may need to edit the [`Makefile`](https://github.com/yxuco/flogo-enterprise-app/blob/master/marble-app/Makefile) and set `CC_DEPLOY` to match the installation folder of `fabric-samples` if it is not downloaded to the default location under `$GOPATH`.
+- Execute `make build` and `make deploy` to deploy the chaincode to the `fabric-samples` chaincode folder.  Note: you may need to edit the [`Makefile`](https://github.com/yxuco/flogo-enterprise-app/blob/master/marble-app/Makefile) and set `CC_DEPLOY` to match the installation folder of `fabric-samples` if it is not downloaded to the default location under `$GOPATH`.
+
+The detailed commands of the above steps are as follows:
+```
+cd $GOPATH/src/github.com/yxuco/flogo-enterprise-app/marble-app
+make create
+make build
+make deploy
+```
 
 ## Test chaincode in fabric devmode
 Start Hyperledger Fabric test network in dev mode:
