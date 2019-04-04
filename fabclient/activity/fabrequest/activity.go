@@ -58,26 +58,26 @@ func (a *FabricRequestActivity) Eval(ctx activity.Context) (done bool, err error
 	// check input args
 	ccID, ok := ctx.GetInput(ivChaincode).(string)
 	if !ok || ccID == "" {
-		log.Error("chaincode ID is not specified\n")
+		log.Error("chaincode ID is not specified")
 		ctx.SetOutput(ovCode, 400)
 		ctx.SetOutput(ovMessage, "chaincode ID is not specified")
 		return false, errors.New("chaincode ID is not specified")
 	}
-	log.Debugf("chaincode ID: %s\n", ccID)
+	log.Debugf("chaincode ID: %s", ccID)
 	txName, ok := ctx.GetInput(ivTransaction).(string)
 	if !ok || txName == "" {
-		log.Error("transaction name is not specified\n")
+		log.Error("transaction name is not specified")
 		ctx.SetOutput(ovCode, 400)
 		ctx.SetOutput(ovMessage, "transaction name is not specified")
 		return false, errors.New("transaction name is not specified")
 	}
-	log.Debugf("transaction name: %s\n", txName)
+	log.Debugf("transaction name: %s", txName)
 	reqType, ok := ctx.GetInput(ivRequestType).(string)
 	if !ok || reqType == "" {
-		log.Warn("request type is not specified, assume `query`\n")
+		log.Warn("request type is not specified, assume `query`")
 		reqType = opQuery
 	}
-	log.Debugf("request type: %s\n", reqType)
+	log.Debugf("request type: %s", reqType)
 
 	params, err := getParameters(ctx)
 	if err != nil {
@@ -95,34 +95,40 @@ func (a *FabricRequestActivity) Eval(ctx activity.Context) (done bool, err error
 	// invoke fabric transaction
 	var response []byte
 	if reqType == opInvoke {
+		log.Debugf("execute chaincode %s transaction %s with parameters %v", ccID, txName, params)
 		response, err = client.ExecuteChaincode(ccID, txName, params)
 	} else {
+		log.Debugf("query chaincode %s transaction %s with parameters %v", ccID, txName, params)
 		response, err = client.QueryChaincode(ccID, txName, params)
 	}
 
 	if err != nil {
-		log.Errorf("Fabric returned error %+v\n", err)
+		log.Errorf("Fabric returned error %+v", err)
 		ctx.SetOutput(ovCode, 500)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("Fabric request returned error: %+v", err))
 		return false, errors.Wrapf(err, "Fabric request returned error")
 	}
 
 	if response == nil {
-		log.Debugf("no data returned from fabric\n")
+		log.Debugf("no data returned from fabric")
 		ctx.SetOutput(ovCode, 300)
 		ctx.SetOutput(ovMessage, "no data returned from fabric")
 		return true, nil
 	}
+	log.Debugf("Fabric response: %s\n", string(response))
+
 	var value interface{}
 	if err := json.Unmarshal(response, &value); err != nil {
-		log.Errorf("failed to unmarshal fabric response %+v, error: %+v\n", response, err)
+		log.Errorf("failed to unmarshal fabric response %+v, error: %+v", response, err)
 		ctx.SetOutput(ovCode, 300)
 		ctx.SetOutput(ovMessage, fmt.Sprintf("data returned from fabric is not JSON: %v", response))
 		return true, nil
 	}
 	if result, ok := ctx.GetOutput(ovResult).(*data.ComplexObject); ok && result != nil {
-		log.Debugf("set activity output result: %+v\n", value)
+		log.Debugf("set activity output result: %+v", value)
 		result.Value = value
+		ctx.SetOutput(ovCode, 200)
+		ctx.SetOutput(ovMessage, string(response))
 		ctx.SetOutput(ovResult, result)
 	}
 	return true, nil
@@ -157,23 +163,23 @@ func getParameters(ctx activity.Context) ([][]byte, error) {
 	// extract parameter definitions from metadata
 	paramObj, ok := ctx.GetInput(ivParameters).(*data.ComplexObject)
 	if !ok {
-		log.Debug("parameter is not a complex object\n")
+		log.Debug("parameter is not a complex object")
 		return result, nil
 	}
 	paramIndex, err := common.OrderedParameters([]byte(paramObj.Metadata))
 	if err != nil {
-		log.Errorf("failed to extract parameter definition from metadata: %+v\n", err)
+		log.Errorf("failed to extract parameter definition from metadata: %+v", err)
 		return result, nil
 	}
 	if len(paramIndex) == 0 {
-		log.Debug("no parameter defined in metadata\n")
+		log.Debug("no parameter defined in metadata")
 		return result, nil
 	}
 
 	// extract parameter values in the order of parameter index
 	paramValue, ok := paramObj.Value.(map[string]interface{})
 	if !ok {
-		log.Debugf("parameter value of type %T is not a JSON object\n", paramObj.Value)
+		log.Debugf("parameter value of type %T is not a JSON object", paramObj.Value)
 		return result, nil
 	}
 	for _, p := range paramIndex {
