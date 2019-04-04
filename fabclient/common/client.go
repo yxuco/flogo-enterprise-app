@@ -36,7 +36,7 @@ type ConnectorSpec struct {
 	EntityMatchers []byte
 	OrgName        string
 	UserName       string
-	ChannelID    string
+	ChannelID      string
 }
 
 // NewFabricClient returns a new or cached fabric client

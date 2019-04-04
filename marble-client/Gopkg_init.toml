@@ -1,0 +1,37 @@
+# Gopkg.toml example
+#
+# Refer to https://golang.github.io/dep/docs/Gopkg.toml.html
+# for detailed Gopkg.toml documentation.
+
+[prune]
+  go-tests = true
+
+[[constraint]]
+  name = "github.com/TIBCOSoftware/flogo-contrib"
+  version = "0.5.8"
+
+[[constraint]]
+  name = "github.com/TIBCOSoftware/flogo-lib"
+  version = "0.5.8"
+
+# These are necessary to complete 'dep ensure -update' for flogo app using both fabric and fabric-sdk-go
+[[override]]
+  name = "github.com/spf13/viper"
+  branch = "master"
+
+[[override]]
+  name = "github.com/hyperledger/fabric"
+  version = "v1.4.0"
+
+[[override]]
+  name = "github.com/hyperledger/fabric-sdk-go"
+  version = "v1.0.0-alpha5"
+
+# Uncomment the following and run 'dep ensure -update' again before running 'flogo build -e'
+#[[override]]
+#  name = "github.com/fsouza/go-dockerclient"
+#  version = "v1.3.6"
+
+#[[override]]
+#  name = "github.com/docker/docker"
+#  branch = "master"
