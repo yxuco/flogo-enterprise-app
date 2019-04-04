@@ -34,6 +34,10 @@ const (
 // Create a new logger
 var log = logger.GetLogger("activity-fabclient-request")
 
+func init() {
+	client.SetFlogoLogLevel(log)
+}
+
 // FabricRequestActivity is a stub for sending Hyperledger Fabric invoke/query request
 type FabricRequestActivity struct {
 	metadata *activity.Metadata
