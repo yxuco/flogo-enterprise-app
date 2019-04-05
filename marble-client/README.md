@@ -1,10 +1,10 @@
 # marble-client
-This is a the sample client app for Hyperledger Fabric.  Implemented using the [TIBCO Flogo® Enterprise](https://docs.tibco.com/products/tibco-flogo-enterprise-2-4-0), this app interacts with the Hyperledger Fabric chaincode [`marble-app`](https://github.com/yxuco/flogo-enterprise-app/tree/master/marble-app) and exposes the blockchain records on the marble network as a set of REST APIs.
+This is a sample client app for Hyperledger Fabric.  Implemented using the [TIBCO Flogo® Enterprise](https://docs.tibco.com/products/tibco-flogo-enterprise-2-4-0), this app interacts with the Hyperledger Fabric chaincode [`marble-app`](https://github.com/yxuco/flogo-enterprise-app/tree/master/marble-app) and exposes a set of REST APIs for managing the data on the marble blockchain network.
 
 ## Build and start the marble-app fabric network
-Complete the prerequisites described in [`marble-app`](https://github.com/yxuco/flogo-enterprise-app/tree/master/marble-app)
+First, complete the prerequisites as described in [`marble-app`](https://github.com/yxuco/flogo-enterprise-app/tree/master/marble-app).
 
-Build and deploy the marble-app chaincode (assuming that the `fabric-samples` are installed under your `$GOPATH`):
+Then, build and deploy the marble-app chaincode (assuming that the `fabric-samples` are installed under your `$GOPATH`):
 ```
 cd $GOPATH/src/github.com/yxuco/flogo-enterprise-app/marble-app
 make create
@@ -18,7 +18,7 @@ cd $GOPATH//src/github.com/hyperledger/fabric-samples/first-network
 ./byfn.sh up -s couchdb
 ```
 
-Using the `cli` container, install the `marble-app` chaincode on both `org1` and `org2`, and then instantiate it.
+Using the `cli` container, install the `marble-app` chaincode on both `org1` and `org2`, and then instantiate it on the fabric network.
 ```
 docker exec -it cli bash
 . scripts/utils.sh
@@ -27,6 +27,7 @@ setGlobals 0 2
 peer chaincode install -n marble_cc -v 1.0 -p github.com/chaincode/marble_cc
 ORDERER_ARGS="-o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
 peer chaincode instantiate $ORDERER_ARGS -C mychannel -n marble_cc -v 1.0 -c '{"Args":["init"]}' -P "AND ('Org1MSP.peer','Org2MSP.peer')"
+exit
 ```
 
 ## Build and start the marble-client app
@@ -38,7 +39,7 @@ make build
 make run
 ```
 
-The step for `create` may take a few minutes because it analyzes and fetches Go dependencies using `dep`, which is slow.  This issue will be resolved in a future Flogo release when `dep` is replaced by `Go modules`.  Sometimes, `dep` may fail on the first try, in which case, you may manually execute the `dep` one more time, i.e.,
+The step for `create` may take a few minutes because it uses `dep` to analyze and fetch Go dependencies, and `dep` is slow.  This issue will be resolved in a future Flogo release when `dep` is replaced by `Go modules`.  Sometimes, `dep` may fail on the first try, in which case, you may manually execute the `dep` one more time, i.e.,
 ```
 cd marble_client/src/marble_client
 dep ensure -v -update
@@ -47,17 +48,17 @@ cd ../..
 
 ## Test marble-client app
 This app implements a set of REST APIs:
-- **Create Marble** (PUT): create a new marble.
-- **Transfer Marble** (PUT): transfer a marble to a new owner.
-- **Transfer By Color** (PUT): transfer marbles of a specified color to a new owner.
-- **Delete Marble** (DELETE): delete the state of a specified marble.
-- **Get Marble** (GET): retrieve a marble record by its key.
-- **Query By Owner** (GET): query marble records by an owner name.
-- **Query By Range** (GET): retrieve marble records in a specified range of keys.
-- **Marble History** (GET): retrieve the history of a marble.
-- **Query Range Page** (GET): retrieve marble records in a range of keys, with pagination support.
+- **Create Marble** (PUT): it creates a new marble.
+- **Transfer Marble** (PUT): it transfers a marble to a new owner.
+- **Transfer By Color** (PUT): it transfers all marbles of a specified color to a new owner.
+- **Delete Marble** (DELETE): it deletes the state of a specified marble.
+- **Get Marble** (GET): it retrieves a marble record by its key.
+- **Query By Owner** (GET): it queries marble records by an owner name.
+- **Query By Range** (GET): it retrieves marble records in a specified range of keys.
+- **Marble History** (GET): it retrieves the history of a marble.
+- **Query Range Page** (GET): it retrieves marble records in a range of keys, with pagination support.
 
-You may use the following commands to test the behavior of these REST APIs.  If you do not like command-line `curl`, you may download and use a REST client tool to submit these REST requests.  For Mac user, the [`Advanced Rest client`](https://install.advancedrestclient.com/install) is pretty user-friendly.
+You may use the following commands to test the behavior of these REST APIs.  If you do not like command-line `curl`, you may download and use a REST client tool to submit these REST requests.  For Mac users, the [`Advanced Rest client`](https://install.advancedrestclient.com/install) is pretty user-friendly.
 
 ```
 # insert test data
@@ -85,10 +86,10 @@ curl -X GET http://localhost:8989/marble/rangepage?startKey=marble1&endKey=marbl
 curl -X GET http://localhost:8989/marble/rangepage?startKey=marble1&endKey=marble7&pageSize=3&bookmark=marble5
 ```
 
-## Cleanup eht marble-app fabric network
-Exit the `cli` shell, and then stop and cleanup the Fabric `first-network`.
+## Cleanup the marble-app fabric network
+Stop and cleanup the Fabric `first-network`.
 ```
-exit
+cd $GOPATH//src/github.com/hyperledger/fabric-samples/first-network
 ./byfn.sh down
 docker rm $(docker ps -a | grep dev-peer | awk '{print $1}')
 docker rmi $(docker images | grep dev-peer | awk '{print $3}')

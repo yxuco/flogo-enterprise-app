@@ -1,5 +1,5 @@
 # marble-app
-This is a the sample chaincode, [marbles02](https://github.com/hyperledger/fabric-samples/tree/release-1.4/chaincode/marbles02) for [Hyperledger Fabric](https://www.hyperledger.org/projects/fabric) implemented by using a [TIBCO Flogo® Enterprise](https://docs.tibco.com/products/tibco-flogo-enterprise-2-4-0) model.
+This is the Flogo version of the [Hyperledger Fabric](https://www.hyperledger.org/projects/fabric) sample chaincode, [marbles02](https://github.com/hyperledger/fabric-samples/tree/release-1.4/chaincode/marbles02) implemented by using a [TIBCO Flogo® Enterprise](https://docs.tibco.com/products/tibco-flogo-enterprise-2-4-0) model.  The model does not require any code, it contains only a JSON model file exported from the TIBCO Flogo® Enterprise.  You can download the prerequisites and then build and deploy the model to a Hyperledger Fabric network as described below.
 
 ## Prerequisite
 - Download [TIBCO Flogo® Enterprise 2.4](https://edelivery.tibco.com/storefront/eval/tibco-flogo-enterprise/prod11810.html)
@@ -24,12 +24,12 @@ cd $GOPATH/src/github.com/hyperledger/fabric-samples
 
 ## Edit smart contract
 - Start TIBCO Flogo® Enterprise as described in [User's Guide](https://docs.tibco.com/pub/flogo/2.4.0/doc/pdf/TIB_flogo_2.4_users_guide.pdf?id=1)
-- Upload [`fabticExtension.zip`](https://github.com/yxuco/flogo-enterprise-app/blob/master/fabricExtension.zip) to TIBCO Flogo® Enterprise [Extensions](http://localhost:8090/wistudio/extensions).  Note that you can recreate this `zip` by using the script [`zip-fabric.sh`](https://github.com/yxuco/flogo-enterprise-app/blob/master/zip-fabric.sh)
+- Upload [`fabricExtension.zip`](https://github.com/yxuco/flogo-enterprise-app/blob/master/fabricExtension.zip) to TIBCO Flogo® Enterprise [Extensions](http://localhost:8090/wistudio/extensions).  Note that you can recreate this `zip` by using the script [`zip-fabric.sh`](https://github.com/yxuco/flogo-enterprise-app/blob/master/zip-fabric.sh)
 - Create new Flogo App of name `marble_app` and choose `Import app` to import the model [`marble_app.json`](https://github.com/yxuco/flogo-enterprise-app/blob/master/marble-app/marble_app.json)
 - You can then add or update contract transactions using the graphical modeler of the TIBCO Flogo® Enterprise.
 
 ## Build and deploy chaincode to Hyperledger Fabric
-- Export the Flogo App, and copy the downloaded model file, i.e., [`marble_app.json`](https://github.com/yxuco/flogo-enterprise-app/blob/master/marble-app/marble_app.json) to folder `marble-app`.  You can skip this step if you did not modify the app in Flogo® Enterprise.
+- Export the Flogo App, and copy the downloaded model file, i.e., [`marble_app.json`](https://github.com/yxuco/flogo-enterprise-app/blob/master/marble-app/marble_app.json) to the folder `marble-app`.  You can skip this step if you did not modify the app in Flogo® Enterprise.
 - In the `marble-app` folder, execute `make create` to generate source code for the chaincode.  This step downloads all dependent packages, and thus may take a while depending on the network speed.
 - Execute `make build` and `make deploy` to deploy the chaincode to the `fabric-samples` chaincode folder.  Note: you may need to edit the [`Makefile`](https://github.com/yxuco/flogo-enterprise-app/blob/master/marble-app/Makefile) and set `CC_DEPLOY` to match the installation folder of `fabric-samples` if it is not downloaded to the default location under `$GOPATH`.
 
@@ -53,7 +53,7 @@ docker exec -it chaincode bash
 cd marble_cc
 CORE_PEER_ADDRESS=peer:7052 CORE_CHAINCODE_ID_NAME=marble_cc:0 CORE_CHAINCODE_LOGGING_LEVEL=DEBUG ./marble_cc
 ```
-In a third terminal, install chaincode and send tests:
+In a third terminal, install chaincode and send test requests:
 ```
 docker exec -it cli bash
 peer chaincode install -p chaincodedev/chaincode/marble_cc -n marble_cc -v 0
@@ -83,7 +83,7 @@ Start Hyperledger Fabric first-network with CouchDB:
 cd $GOPATH//src/github.com/hyperledger/fabric-samples/first-network
 ./byfn.sh up -s couchdb
 ```
-Using the `cli` container, install the `marble` chaincode on both `org1` and `org2`, and then instantiate it.
+Use the `cli` container to install the `marble_cc` chaincode on both `org1` and `org2`, and then instantiate it.
 ```
 docker exec -it cli bash
 . scripts/utils.sh
@@ -93,7 +93,7 @@ peer chaincode install -n marble_cc -v 1.0 -p github.com/chaincode/marble_cc
 ORDERER_ARGS="-o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
 peer chaincode instantiate $ORDERER_ARGS -C mychannel -n marble_cc -v 1.0 -c '{"Args":["init"]}' -P "AND ('Org1MSP.peer','Org2MSP.peer')"
 ```
-Using `cli` container, send marble transaction messages:
+Use `cli` container to send marble transaction requests:
 ```
 ORG1_ARGS="--peerAddresses peer0.org1.example.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt"
 ORG2_ARGS="--peerAddresses peer0.org2.example.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt"
