@@ -95,10 +95,10 @@ func (a *FabricRequestActivity) Eval(ctx activity.Context) (done bool, err error
 	// invoke fabric transaction
 	var response []byte
 	if reqType == opInvoke {
-		log.Debugf("execute chaincode %s transaction %s with parameters %v", ccID, txName, params)
+		log.Debugf("execute chaincode %s transaction %s", ccID, txName)
 		response, err = client.ExecuteChaincode(ccID, txName, params)
 	} else {
-		log.Debugf("query chaincode %s transaction %s with parameters %v", ccID, txName, params)
+		log.Debugf("query chaincode %s transaction %s", ccID, txName)
 		response, err = client.QueryChaincode(ccID, txName, params)
 	}
 
