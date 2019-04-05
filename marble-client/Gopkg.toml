@@ -28,7 +28,7 @@
 
 [[override]]
   name = "github.com/fsouza/go-dockerclient"
-  version = "v1.3.6"
+  version = "v1.3.0"
 
 [[override]]
   name = "github.com/docker/docker"

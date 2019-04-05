@@ -15,16 +15,13 @@ clean:
 create: $(APP_FILE) clean
 	-flogo create -f $(APP_FILE) $(APP_NAME)
 	@echo "copy dep rules, and reset dependency..."
-	cp Gopkg_init.toml $(APP_NAME)/src/$(APP_NAME)/Gopkg.toml
+	cp Gopkg.toml $(APP_NAME)/src/$(APP_NAME)
 	sleep 10
 	cd $(APP_NAME)/src/$(APP_NAME) && \
 	dep ensure -v -update
 
 .PHONY: build
 build: $(APP_NAME)
-	cp Gopkg.toml $(APP_NAME)/src/$(APP_NAME)/Gopkg.toml
-	cd $(APP_NAME)/src/$(APP_NAME) && \
-	dep ensure -v -update
 	cd $(APP_NAME) && \
 	flogo build -e
 #	GO111MODULE=on go mod init github.com/yxuco/$(APP_NAME)
