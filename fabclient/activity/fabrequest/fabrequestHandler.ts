@@ -50,7 +50,7 @@ export class fabrequestHandler extends WiServiceHandlerContribution {
     }
 
     validate = (fieldName: string, context: IActivityContribution): Observable<IValidationResult> | IValidationResult => {
-        if (fieldName === "parameters" || fieldName === "result") {
+        if (fieldName === "parameters" || fieldName === "transient" || fieldName === "result") {
             return Observable.create(observer => {
                 let vresult: IValidationResult = ValidationResult.newValidationResult();
                 let valueField: IFieldDefinition = context.getField(fieldName);

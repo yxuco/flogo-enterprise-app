@@ -61,6 +61,18 @@
                 "mappable": true,
                 "visible": true
             }
+        },
+        {
+            "name": "transient",
+            "type": "complex_object",
+            "display": {
+                "name": "Transient attributes",
+                "description": "An example JSON data that defines transient input attributes of the transaction, e.g.,\r\n{\r\n  \"trans1\": \"string\",\r\n  \"trans2\": {\"field1\": 0}\r\n}",
+                "type": "texteditor",
+                "syntax": "json",
+                "mappable": true,
+                "visible": true
+            }
         }
     ],
     "outputs": [

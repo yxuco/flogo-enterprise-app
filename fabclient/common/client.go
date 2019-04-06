@@ -109,8 +109,8 @@ func (c *FabricClient) Close() {
 }
 
 // QueryChaincode sends query request to Fabric network
-func (c *FabricClient) QueryChaincode(ccID, fcn string, args [][]byte) ([]byte, error) {
-	response, err := c.client.Query(channel.Request{ChaincodeID: ccID, Fcn: fcn, Args: args},
+func (c *FabricClient) QueryChaincode(ccID, fcn string, args [][]byte, transient map[string][]byte) ([]byte, error) {
+	response, err := c.client.Query(channel.Request{ChaincodeID: ccID, Fcn: fcn, Args: args, TransientMap: transient},
 		channel.WithRetry(retry.DefaultChannelOpts),
 	)
 	if err != nil {
@@ -120,8 +120,8 @@ func (c *FabricClient) QueryChaincode(ccID, fcn string, args [][]byte) ([]byte, 
 }
 
 // ExecuteChaincode sends invocation request to Fabric network
-func (c *FabricClient) ExecuteChaincode(ccID, fcn string, args [][]byte) ([]byte, error) {
-	response, err := c.client.Execute(channel.Request{ChaincodeID: ccID, Fcn: fcn, Args: args},
+func (c *FabricClient) ExecuteChaincode(ccID, fcn string, args [][]byte, transient map[string][]byte) ([]byte, error) {
+	response, err := c.client.Execute(channel.Request{ChaincodeID: ccID, Fcn: fcn, Args: args, TransientMap: transient},
 		channel.WithRetry(retry.DefaultChannelOpts),
 	)
 	if err != nil {

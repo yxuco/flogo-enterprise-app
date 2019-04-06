@@ -18,6 +18,7 @@ const (
 	ivChaincode      = "chaincodeID"
 	ivTransaction    = "transactionName"
 	ivParameters     = "parameters"
+	ivTransient      = "transient"
 	ovCode           = "code"
 	ovMessage        = "message"
 	ovResult         = "result"
@@ -85,6 +86,8 @@ func (a *FabricRequestActivity) Eval(ctx activity.Context) (done bool, err error
 		ctx.SetOutput(ovMessage, fmt.Sprintf("invalid parameters: %+v", err))
 		return false, err
 	}
+	transientMap := getTransient(ctx)
+
 	client, err := getFabricClient(ctx)
 	if err != nil {
 		ctx.SetOutput(ovCode, 500)
@@ -96,10 +99,10 @@ func (a *FabricRequestActivity) Eval(ctx activity.Context) (done bool, err error
 	var response []byte
 	if reqType == opInvoke {
 		log.Debugf("execute chaincode %s transaction %s", ccID, txName)
-		response, err = client.ExecuteChaincode(ccID, txName, params)
+		response, err = client.ExecuteChaincode(ccID, txName, params, transientMap)
 	} else {
 		log.Debugf("query chaincode %s transaction %s", ccID, txName)
-		response, err = client.QueryChaincode(ccID, txName, params)
+		response, err = client.QueryChaincode(ccID, txName, params, transientMap)
 	}
 
 	if err != nil {
@@ -156,6 +159,29 @@ func getFabricClient(ctx activity.Context) (*client.FabricClient, error) {
 		UserName:       configs[conUserName].(string),
 		ChannelID:      configs[conChannel].(string),
 	})
+}
+
+func getTransient(ctx activity.Context) map[string][]byte {
+	// extract transient object
+	transObj, ok := ctx.GetInput(ivTransient).(*data.ComplexObject)
+	if !ok {
+		log.Debug("transient data is not a complex object")
+		return nil
+	}
+	transData, ok := transObj.Value.(map[string]interface{})
+	if !ok {
+		log.Info("transient data is not a JSON object")
+		return nil
+	}
+	transMap := make(map[string][]byte)
+	for k, v := range transData {
+		if jsonBytes, err := json.Marshal(v); err != nil {
+			log.Infof("failed to marshal transient data %+v", err)
+		} else {
+			transMap[k] = jsonBytes
+		}
+	}
+	return transMap
 }
 
 func getParameters(ctx activity.Context) ([][]byte, error) {
