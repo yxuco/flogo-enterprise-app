@@ -11,7 +11,8 @@ Samples for Hyperledger Fabric chaincode:
 
 These are the zero-code version of the `marbles02` and `marbles02_private` chaincode in [`fabric samples`](https://github.com/hyperledger/fabric-samples/tree/release-1.4/chaincode).  The hundreds of lines of boilerplate code are replaced by a JSON model file exported from the TIBCO Flogo® Enterprise, where the chaincode is modeled by drag-and-drop.
 
-Sample REST service as a Hyperledger Fabric client:
+Sample REST services as a Hyperledger Fabric client:
 - [`marble-client`](https://github.com/yxuco/flogo-enterprise-app/tree/master/marble-client)
+- [`marble-private-client`](https://github.com/yxuco/flogo-enterprise-app/tree/master/marble-private-client)
 
-This sample service is a client of the `marble-app` network.  It exposes REST APIs that interact with the distributed ledger in Hyperledger Fabric network.  This app does not require any code, it contains only a JSON model file exported from the the TIBCO Flogo® Enterprise, where the REST service is modeled by drag-and-drop.
+These sample REST services are clients of the `marble-app` and `marble-private` networks.  They implement REST APIs that interact with the distributed ledger in Hyperledger Fabric network.  These Flogo apps do not require any code, each app contains only a JSON model file exported from the the TIBCO Flogo® Enterprise, where the REST APIs are modeled by drag-and-drop.
