@@ -120,7 +120,7 @@ func constructChaincodeArgs(ctx activity.Context) ([][]byte, error) {
 		log.Errorf("failed to extract parameter definition from metadata: %+v\n", err)
 		return result, nil
 	}
-	if len(paramIndex) == 0 {
+	if paramIndex == nil || len(paramIndex) == 0 {
 		log.Debug("no parameter defined in metadata\n")
 		return result, nil
 	}

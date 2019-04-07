@@ -1,7 +1,7 @@
 MAKEFILE_THIS := $(lastword $(MAKEFILE_LIST))
 SRC_PATH      := $(patsubst %/,%,$(dir $(abspath $(MAKEFILE_THIS))))
-APP_FILE      := marble_client_app.json
-APP_NAME      := marble_client
+APP_FILE      := marble_private_client.json
+APP_NAME      := marbleprivate_client
 LOG_LEVEL     := INFO
 
 .PHONY: all

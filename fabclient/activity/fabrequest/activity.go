@@ -197,7 +197,7 @@ func getParameters(ctx activity.Context) ([][]byte, error) {
 		log.Errorf("failed to extract parameter definition from metadata: %+v", err)
 		return result, nil
 	}
-	if len(paramIndex) == 0 {
+	if paramIndex == nil || len(paramIndex) == 0 {
 		log.Debug("no parameter defined in metadata")
 		return result, nil
 	}

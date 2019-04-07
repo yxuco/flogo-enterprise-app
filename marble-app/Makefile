@@ -17,10 +17,10 @@ clean:
 create: $(APP_FILE) clean
 	flogo create -f $(APP_FILE) $(APP_NAME) && \
 	cp $(CONTRACT_PATH)/chaincode_shim.go $(APP_NAME)/src/$(APP_NAME) && \
+	cp Gopkg.toml $(APP_NAME)/src/$(APP_NAME) && \
 	rm $(APP_NAME)/src/$(APP_NAME)/main.go && \
 	cd $(APP_NAME)/src/$(APP_NAME) && \
-	rm -Rf Gopkg.* vendor && \
-	dep init
+	dep ensure -v -update
 
 .PHONY: build
 build: $(APP_NAME)

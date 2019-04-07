@@ -8,7 +8,6 @@ Then, build and deploy the marble-app chaincode (assuming that the `fabric-sampl
 ```
 cd $GOPATH/src/github.com/yxuco/flogo-enterprise-app/marble-app
 make create
-make build
 make deploy
 ```
 
@@ -18,7 +17,7 @@ cd $GOPATH//src/github.com/hyperledger/fabric-samples/first-network
 ./byfn.sh up -s couchdb
 ```
 
-Using the `cli` container, install the `marble-app` chaincode on both `org1` and `org2`, and then instantiate it on the fabric network.
+Use the `cli` container to install the `marble_cc` chaincode on both `org1` and `org2`, and then instantiate it on the fabric network.
 ```
 docker exec -it cli bash
 . scripts/utils.sh

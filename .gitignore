@@ -3,3 +3,4 @@ marble-app/marble_cc/
 marble-private/marble_private_cc/
 testdata/crypto-config/
 marble-client/marble_client/
+marble-private-client/marbleprivate_client

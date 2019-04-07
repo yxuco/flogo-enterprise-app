@@ -106,6 +106,10 @@ func addIndex(parameters []ParameterIndex, param ParameterIndex) []ParameterInde
 // OrderedParameters returns parameters of a JSON schema object sorted by their position in schema definition
 // This is necessary because Golang JSON parser does not maintain the sequence of object parameters.
 func OrderedParameters(schemaData []byte) ([]ParameterIndex, error) {
+	if schemaData == nil || len(schemaData) == 0 {
+		log.Debug("schema data is empty")
+		return nil, nil
+	}
 	// extract root object properties from JSON schema
 	var rawProperties struct {
 		Data json.RawMessage `json:"properties"`
@@ -205,12 +209,12 @@ func ConstructQueryResponse(resultsIterator shim.StateQueryIteratorInterface, is
 		if !isEmpty {
 			buffer.WriteString(",")
 		}
-		buffer.WriteString("{\""+KeyField+"\":")
+		buffer.WriteString("{\"" + KeyField + "\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(key)
 		buffer.WriteString("\"")
 
-		buffer.WriteString(", \""+ValueField+"\":")
+		buffer.WriteString(", \"" + ValueField + "\":")
 		// Record is a JSON object, so we write as-is
 		buffer.WriteString(string(value))
 		buffer.WriteString("}")

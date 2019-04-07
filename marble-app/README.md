@@ -37,7 +37,6 @@ The detailed commands of the above steps are as follows:
 ```
 cd $GOPATH/src/github.com/yxuco/flogo-enterprise-app/marble-app
 make create
-make build
 make deploy
 ```
 
